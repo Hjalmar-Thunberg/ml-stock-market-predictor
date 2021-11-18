@@ -1,7 +1,7 @@
-## Expected Behaviour
+### Expected Behaviour
 Replace this text
 
-## Actual Behaviour
+### Actual Behaviour
 Replace this text
 
 ### Steps to reproduce
