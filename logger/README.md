@@ -8,4 +8,19 @@ The logger is a component that will attach to any other component manipulating d
 4. These log files shall be stored in a central location such as a "logs" folder in the repository/project root directory.
 5. The logger shall provide the user with a variety of urgencies to log their messages with such as None, Mild, Severe.
 ### How to use
-TBA
+1. Import the Logger into the desired component.
+2. Create the Logger instance
+```python
+logger = Logger('logs_myComponentName.db')
+```
+3. On methods where data is being manipulated, or exceptions are expected, add the following line:
+```python
+logger.log(
+    message="My message to be logged",
+    urgency=logger.urgency.NONE|LOW|MODERATE|HIGH|SEVERE # This parameter defaults to logger.urgency.NONE
+    )
+```
+4. When the logger is done, to preserve resources call:
+```python
+logger.close()
+```
