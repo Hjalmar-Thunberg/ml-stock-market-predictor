@@ -1,18 +1,23 @@
+# import libraries
 import pandas_datareader as pdr
 import sqlite3
+import os
+from datetime import datetime, timedelta 
 
-stocks = ['ETH-USD', 'TSLA', 'BTC-USD', 'BNB-USD', 'DIS', 'PSFE', 'BYND', 'SOFI', 'WISH', 'EGRNY', 'APP']
-conn = sqlite3.connect("stocks.db")
+ # fetcher attributes
+stocks = ['GME', 'RBLX', 'NVDA', 'TSLA', 'COIN', 'FB', 'BYND', 'AAPL', 'AMC', 'MSFT', 'SHOP', 'ACB', 'TLRY', 'NFLX', 'GOOG', 'AMZN', 'DIS', 'BYND', 'ZM', 'PTON']
+source = 'yahoo'
+today = datetime.now() # todays date (YYYY-MM-DD HH:MM:SS)
+years = 10             # years back to start from
+startYear = today-timedelta(days=365*years)
+
+# connect to sqlite database
+conn = sqlite3.connect(os.path.realpath('../data/stock.db'))
 c = conn.cursor()
 
+# fetch data for each stock
 for x in stocks:
-    df = pdr.DataReader(x, data_source='yahoo', start='2005-01-01', end='2021-11-10')
+    df = pdr.DataReader(x, data_source=source, start=startYear, end=today)
     df.to_sql(x, conn, if_exists='replace')
     print(df)
 
-for y in stocks:
-    query = "SELECT * FROM " + y
-    print(query)
-    c.execute(query)
-
-print(c.fetchone())
