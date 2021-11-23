@@ -35,26 +35,26 @@ class Logger:
         Establishes the connection and cursor to the database specified
         when instantiating the Logger.
         """
-        # If the last directory is this one move up one folder
-        if os.getcwd().split(os.sep)[-1] == 'logger':
-            os.chdir('..')
+        # Store the current working directory from the calling file
+        cwd = os.getcwd()
         
         # If the logs dir does not exist, create it
-        if not os.path.exists(os.path.join(os.getcwd(), 'logs')) and \
-        os.getcwd().split(os.sep)[-1] != 'logs':
+        logs_dir = os.path.abspath('logs')
+        if not os.path.exists(logs_dir) and cwd != logs_dir:
             os.mkdir('logs')
-            self.log(f"Created logs folder in: {os.getcwd()}", self.urgency.LOW)
             
         # If the current working dir is not ../logs change into it
-        if not os.getcwd().split(os.sep)[-1] == 'logs':
-            os.chdir(os.path.join(os.getcwd(), 'logs'))
+        if cwd != logs_dir:
+            os.chdir(logs_dir)
         
         # Establish a database connection if it does not exist
         if self._conn is None:
             self._conn = sqlite3.connect(self.database_name)
+            
         # Create the cursor from the connection
         self._cursor = self._conn.cursor()
-        self.log(f"Connected logger to {self.database_name}")
+        # Change working directory back to cached working directory
+        os.chdir(cwd)
 
     def log(self, message, urgency=None):
         """
@@ -96,7 +96,7 @@ class Logger:
             self._cursor.execute(insert_log_query)
         except Exception as e:
             # Log any exceptions so that they may be dealt with in the future
-            self.log(f"{type(e)}: {e}\nOccurred in Logger", self.urgency.HIGH)
+            print(e)
         finally:
             # Commit changes
             self._conn.commit()
@@ -116,7 +116,6 @@ class Logger:
         Closes the Logger's connection with the database.
         Only call this method when you are done with the Logger instance.
         """
-        self.log(f"Closing connection with {self.database_name}", self.urgency.MODERATE)
         self._conn.close()
         
     class _Urgency(Enum):
@@ -130,5 +129,3 @@ class Logger:
         MODERATE = 2 # Potentially unexpected event or result
         HIGH     = 3 # Caught exceptions, unexpected events
         SEVERE   = 4 # Exceptions that break the system, bugs, etc.
-
-logger = Logger('logs_logger.db')
