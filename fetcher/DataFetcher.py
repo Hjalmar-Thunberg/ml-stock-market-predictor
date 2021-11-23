@@ -1,18 +1,16 @@
-# import libraries
 import pandas_datareader as pdr
 import sqlite3
 from datetime import datetime, timedelta 
 import os
 from logger.Logger import Logger
-
-class DateFetcher:
+import csv
+class DataFetcher:
     """
     A class designed to fetch data
 
     Params:
-
+        db_name: str - The database name where dirty data will be stored.
     """
-
     def __init__(self, db_name):
         assert type(db_name) is str and len(db_name) > 0, 'Database name must be provided as str'
 
@@ -22,7 +20,11 @@ class DateFetcher:
         self._cursor = None
         self._connect()
 
-    def connect(self):
+    def _connect(self):
+        """
+        Connect to the specified database.
+        Create a data directory if none exists.
+        """
         cwd = os.getcwd()
         data_dir = os.path.join(cwd, 'data')
         if not os.path.exists(data_dir):
@@ -35,21 +37,29 @@ class DateFetcher:
         os.chdir(cwd)
 
     def close(self):
-        self.logger.log(f'Closing connection to {self.db_name}'. self.log)
+        """ Close database and logger connections """
+        self.logger.log(f'Closing connection to {self.db_name}', self.logger.urgency.MODERATE)
         self._conn.close()
         self.logger.close()
 
-    def fetch_stock_data(stock_file):
+    def fetch_stock_data(self, stock_file):
+        """ 
+        Fetches given data from a csv file.
+        Params:
+            stock_file: The path to the input csv file.
 
+        """
         with open(stock_file) as f:
-            stocks = f.readlines()
+            # Reads csv file into a list
+            reader = csv.reader(f)
+            stocks = list(reader)
 
-        today = datetime.now() # todays date (YYYY-MM-DD HH:MM:SS)
-        years = 10             # years back to start from
-        startYear = today-timedelta(days=365*years)
-
-        # fetch data for each stock
-        for stock in stocks.list:
-            df = pdr.DataReader(stock, data_source='yahoo', start=startYear, end=today)
-            df.to_sql(stock, conn, if_exists='replace')
-            print(df)
+            # fetch all data from yahoo for each given stock
+            for stock in stocks:
+                try:
+                    df = pdr.DataReader(stock[0], data_source='yahoo', start=datetime.now()-timedelta(days=365*10), end=datetime.now())
+                    df.to_sql(stock[0], self._conn, if_exists='replace')
+                    self.logger.log(f'Fetched data for {stock[0]}', self.logger.urgency.LOW)
+                    print(df)
+                except Exception as e:
+                    self.logger.log(f'{type(e)}: {e}, could not fetch data for {stock[0]}', self.logger.urgency.HIGH) # TODO: this doesn't work
