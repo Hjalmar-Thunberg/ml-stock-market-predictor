@@ -10,6 +10,7 @@
 3. `pipenv shell`
 4. `pip install django`
 5. `pip install django-admin`
+6. `pip install djangorestframework`
 
 **How to run:**
 `python manage.py runserver [PORT NUMBER]`
