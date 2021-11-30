@@ -20,6 +20,9 @@ class Logger:
         self.urgency = self._Urgency
         # Today's date in the format Mon_DD_MM_YYYY
         self.today = datetime.now(tz=None).strftime('%a_%d_%b_%Y')
+        self.ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.LOGS_PATH = os.path.join(self.ROOT_DIR, 'logs')
+        self.cwd = os.getcwd()
 
         # Name of the database
         self.database_name = database_name
@@ -36,16 +39,13 @@ class Logger:
         when instantiating the Logger.
         """
         # Store the current working directory from the calling file
-        cwd = os.getcwd()
-        
         # If the logs dir does not exist, create it
-        logs_dir = os.path.abspath('logs')
-        if not os.path.exists(logs_dir) and cwd != logs_dir:
+        if not os.path.exists(self.LOGS_PATH) and self.cwd != self.LOGS_PATH:
             os.mkdir('logs')
             
         # If the current working dir is not ../logs change into it
-        if cwd != logs_dir:
-            os.chdir(logs_dir)
+        if self.cwd != self.LOGS_PATH:
+            os.chdir(self.LOGS_PATH)
         
         # Establish a database connection if it does not exist
         if self._conn is None:
@@ -54,7 +54,7 @@ class Logger:
         # Create the cursor from the connection
         self._cursor = self._conn.cursor()
         # Change working directory back to cached working directory
-        os.chdir(cwd)
+        os.chdir(self.cwd)
 
     def log(self, message, urgency=None):
         """
@@ -90,6 +90,7 @@ class Logger:
         """
         
         try:
+            os.chdir(self.LOGS_PATH)
             # Execute the create table query
             self._cursor.execute(create_table_query)
             # Execute the insert log query
@@ -100,6 +101,7 @@ class Logger:
         finally:
             # Commit changes
             self._conn.commit()
+        os.chdir(self.cwd)
 
     def get_timestamp(self):
         """

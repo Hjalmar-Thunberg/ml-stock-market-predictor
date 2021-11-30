@@ -8,7 +8,24 @@ The logger is a component that will attach to any other component manipulating d
 4. These log files shall be stored in a central location such as a "logs" folder in the repository/project root directory.
 5. The logger shall provide the user with a variety of urgencies to log their messages with such as None, Mild, Severe.
 ### How to use
-1. Import the Logger into the desired component.
+1. Import the Logger into the desired component. <br>
+Due to the nature of importing modules from sibling directories a hacky approach is needed depending on the depth of the sibling dir.
+```python
+import sys
+import os
+
+cwd = os.getcwd()
+basepath = ''
+while True:
+    if os.path.exists('logger'):
+        break
+    os.chdir('..')
+    basepath = os.path.join(basepath, '..')
+os.chdir(cwd)
+if not basepath in sys.path:
+    sys.path.insert(0, basepath)
+from logger.Logger import Logger
+```
 2. Create the Logger instance
 ```python
 logger = Logger('logs_myComponentName.db')
