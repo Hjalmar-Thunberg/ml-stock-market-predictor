@@ -19,5 +19,6 @@ urlpatterns = [
     # path('', include(router.urls)),
     # path('api-auth/', include('rest_framework.urls'))
     url(r'^predModels/$',views.task_list),
+    url(r'^get-model-data/(?P<table_name>\w{0,50})/$',views.get_model_data),
     url(r'^predModels/(?P<pk>[0-9]+)$', views.task_detail),
 ]
