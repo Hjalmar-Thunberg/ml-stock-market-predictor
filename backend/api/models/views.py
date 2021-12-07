@@ -31,7 +31,7 @@ def get_df_from_table(table_name):
 	conn = sqlite3.connect(database_path)
 	df = pd.read_sql_query(f'SELECT * FROM {table_name}', conn)
 	if df is not None:
-         return df
+		return df
 	return None
 
 def get_model_data(request, table_name):
@@ -51,16 +51,16 @@ def task_list(request):
 	if request.method == 'GET':
 		task = PredModel.objects.all()
 		task_serializer = Serializer(task, many=True)
-		return JSONResponse(task_serializer.data)
+		return JsonResponse(task_serializer.data)
 
 	elif request.method == 'POST':
 		task_data = JSONParser().parse(request)
 		task_serializer = Serializer(data=task_data)
 		if task_serializer.is_valid():
 			task_serializer.save()
-			return JSONResponse(task_serializer.data, \
+			return JsonResponse(task_serializer.data, \
 								status=status.HTTP_201_CREATED)
-		return JSONResponse(task_serializer.errors, \
+		return JsonResponse(task_serializer.errors, \
 							status = status.HTTP_400_BAD_REQUEST)
 			
 # api calls for get/put/delete with pk "private key"
@@ -74,15 +74,15 @@ def task_detail(request, pk):
 
 	if request.method == 'GET':
 		task_serializer = Serializer(task, many=False)
-		return JSONResponse(task_serializer.data)
+		return JsonResponse(task_serializer.data)
 
 	elif request.method == 'PUT':
 		task_data = JSONParser().parse(request)
 		task_serializer = Serializer(task, data=task_data)
 		if task_serializer.is_valid():
 			task_serializer.save()
-			return JSONResponse(task_serializer.data)
-		return JSONResponse(task_serializer.errors, \
+			return JsonResponse(task_serializer.data)
+		return JsonResponse(task_serializer.errors, \
 							status=status.HTTP_400_BAD_REQUESTS)
 
 	elif request.method == 'DELETE':
