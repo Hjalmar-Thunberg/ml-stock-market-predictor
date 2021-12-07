@@ -1,6 +1,5 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState, useEffect } from "react";
 import { AreaClosed, Line, Bar } from "@visx/shape";
-import appleStock, { AppleStock } from "@visx/mock-data/lib/mocks/appleStock";
 import { curveMonotoneX } from "@visx/curve";
 import { GridRows, GridColumns } from "@visx/grid";
 import { scaleTime, scaleLinear } from "@visx/scale";
@@ -15,10 +14,16 @@ import { localPoint } from "@visx/event";
 import { LinearGradient } from "@visx/gradient";
 import { max, extent, bisector } from "d3-array";
 import { timeFormat } from "d3-time-format";
+import { AutoComplete } from "components";
+import api from "../api";
 
-type TooltipData = AppleStock;
+type GraphStock = {
+	date: string;
+	close: number;
+};
 
-const stock = appleStock.slice(800);
+type TooltipData = GraphStock;
+
 export const background = "#3b6978";
 export const background2 = "#204051";
 export const accentColor = "#edffea";
@@ -34,9 +39,25 @@ const tooltipStyles = {
 const formatDate = timeFormat("%b %d, '%y");
 
 // accessors
-const getDate = (d: AppleStock) => new Date(d.date);
-const getStockValue = (d: AppleStock) => d.close;
-const bisectDate = bisector<AppleStock, Date>((d) => new Date(d.date)).left;
+const getDate = (d: GraphStock) => new Date(d.date);
+const getStockValue = (d: GraphStock) => d.close;
+const bisectDate = bisector<GraphStock, Date>((d) => new Date(d.date)).left;
+
+const getInitialData = async (): Promise<GraphStock[]> => {
+	let data: GraphStock[] = [];
+	await api.get("get-model-data/AAPL/").then((response) => {
+		const res = response.data.Close;
+		for (const i in res) {
+			const v: GraphStock = {
+				date: response.data.Date[i].split(" ")[0],
+				close: Math.round(res[i] * 100) / 100,
+			};
+			data.push(v);
+		}
+	});
+	data = data.splice(data.length - 60);
+	return data || [{ date: "2021-11-22", close: 161.0200042725 }];
+};
 
 export type AreaProps = {
 	width: number;
@@ -57,6 +78,19 @@ export default withTooltip<AreaProps, TooltipData>(
 	}: AreaProps & WithTooltipProvidedProps<TooltipData>) => {
 		if (width < 10) return null;
 
+		const [stockData, setStockData] = useState<GraphStock[]>([
+			{ date: "2021-11-22", close: 161.0200042725 },
+		]);
+
+		useEffect(() => {
+			getInitialData()
+				.then((data) => {
+					console.log(data);
+					setStockData(data);
+				})
+				.catch((err) => console.log(err));
+		}, []);
+
 		// bounds
 		const innerWidth = width - margin.left - margin.right;
 		const innerHeight = height - margin.top - margin.bottom;
@@ -66,7 +100,7 @@ export default withTooltip<AreaProps, TooltipData>(
 			() =>
 				scaleTime({
 					range: [margin.left, innerWidth + margin.left],
-					domain: extent(stock, getDate) as [Date, Date],
+					domain: extent(stockData, getDate) as [Date, Date],
 				}),
 			[innerWidth, margin.left],
 		);
@@ -74,7 +108,7 @@ export default withTooltip<AreaProps, TooltipData>(
 			() =>
 				scaleLinear({
 					range: [innerHeight + margin.top, margin.top],
-					domain: [0, (max(stock, getStockValue) || 0) + innerHeight / 3],
+					domain: [0, (max(stockData, getStockValue) || 0) + innerHeight / 3],
 					nice: true,
 				}),
 			[margin.top, innerHeight],
@@ -89,9 +123,9 @@ export default withTooltip<AreaProps, TooltipData>(
 			) => {
 				const { x } = localPoint(event) || { x: 0 };
 				const x0 = dateScale.invert(x);
-				const index = bisectDate(stock, x0, 1);
-				const d0 = stock[index - 1];
-				const d1 = stock[index];
+				const index = bisectDate(stockData, x0, 1);
+				const d0 = stockData[index - 1];
+				const d1 = stockData[index];
 				let d = d0;
 				if (d1 && getDate(d1)) {
 					d =
@@ -111,99 +145,102 @@ export default withTooltip<AreaProps, TooltipData>(
 
 		return (
 			<div>
-				<svg width={width} height={height}>
-					<rect
-						x={0}
-						y={0}
-						width={width}
-						height={height}
-						fill="url(#area-background-gradient)"
-						rx={14}
-					/>
-					<LinearGradient
-						id="area-background-gradient"
-						from={background}
-						to={background2}
-					/>
-					<LinearGradient
-						id="area-gradient"
-						from={accentColor}
-						to={accentColor}
-						toOpacity={0.1}
-					/>
-					<GridRows
-						left={margin.left}
-						scale={stockValueScale}
-						width={innerWidth}
-						strokeDasharray="1,3"
-						stroke={accentColor}
-						strokeOpacity={0}
-						pointerEvents="none"
-					/>
-					<GridColumns
-						top={margin.top}
-						scale={dateScale}
-						height={innerHeight}
-						strokeDasharray="1,3"
-						stroke={accentColor}
-						strokeOpacity={0.2}
-						pointerEvents="none"
-					/>
-					<AreaClosed<AppleStock>
-						data={stock}
-						x={(d) => dateScale(getDate(d)) ?? 0}
-						y={(d) => stockValueScale(getStockValue(d)) ?? 0}
-						yScale={stockValueScale}
-						strokeWidth={1}
-						stroke="url(#area-gradient)"
-						fill="url(#area-gradient)"
-						curve={curveMonotoneX}
-					/>
-					<Bar
-						x={margin.left}
-						y={margin.top}
-						width={innerWidth}
-						height={innerHeight}
-						fill="transparent"
-						rx={14}
-						onTouchStart={handleTooltip}
-						onTouchMove={handleTooltip}
-						onMouseMove={handleTooltip}
-						onMouseLeave={() => hideTooltip()}
-					/>
-					{tooltipData && (
-						<g>
-							<Line
-								from={{ x: tooltipLeft, y: margin.top }}
-								to={{ x: tooltipLeft, y: innerHeight + margin.top }}
-								stroke={accentColorDark}
-								strokeWidth={2}
-								pointerEvents="none"
-								strokeDasharray="5,2"
-							/>
-							<circle
-								cx={tooltipLeft}
-								cy={tooltipTop + 1}
-								r={4}
-								fill="black"
-								fillOpacity={0.1}
-								stroke="black"
-								strokeOpacity={0.1}
-								strokeWidth={2}
-								pointerEvents="none"
-							/>
-							<circle
-								cx={tooltipLeft}
-								cy={tooltipTop}
-								r={4}
-								fill={accentColorDark}
-								stroke="white"
-								strokeWidth={2}
-								pointerEvents="none"
-							/>
-						</g>
-					)}
-				</svg>
+				<AutoComplete setData={setStockData} />
+				{stockData.length > 1 && (
+					<svg width={width} height={height}>
+						<rect
+							x={0}
+							y={0}
+							width={width}
+							height={height}
+							fill="url(#area-background-gradient)"
+							rx={14}
+						/>
+						<LinearGradient
+							id="area-background-gradient"
+							from={background}
+							to={background2}
+						/>
+						<LinearGradient
+							id="area-gradient"
+							from={accentColor}
+							to={accentColor}
+							toOpacity={0.1}
+						/>
+						<GridRows
+							left={margin.left}
+							scale={stockValueScale}
+							width={innerWidth}
+							strokeDasharray="1,3"
+							stroke={accentColor}
+							strokeOpacity={0}
+							pointerEvents="none"
+						/>
+						<GridColumns
+							top={margin.top}
+							scale={dateScale}
+							height={innerHeight}
+							strokeDasharray="1,3"
+							stroke={accentColor}
+							strokeOpacity={0.2}
+							pointerEvents="none"
+						/>
+						<AreaClosed<GraphStock>
+							data={stockData}
+							x={(d) => dateScale(getDate(d)) ?? 0}
+							y={(d) => stockValueScale(getStockValue(d)) ?? 0}
+							yScale={stockValueScale}
+							strokeWidth={1}
+							stroke="url(#area-gradient)"
+							fill="url(#area-gradient)"
+							curve={curveMonotoneX}
+						/>
+						<Bar
+							x={margin.left}
+							y={margin.top}
+							width={innerWidth}
+							height={innerHeight}
+							fill="transparent"
+							rx={14}
+							onTouchStart={handleTooltip}
+							onTouchMove={handleTooltip}
+							onMouseMove={handleTooltip}
+							onMouseLeave={() => hideTooltip()}
+						/>
+						{tooltipData && (
+							<g>
+								<Line
+									from={{ x: tooltipLeft, y: margin.top }}
+									to={{ x: tooltipLeft, y: innerHeight + margin.top }}
+									stroke={accentColorDark}
+									strokeWidth={2}
+									pointerEvents="none"
+									strokeDasharray="5,2"
+								/>
+								<circle
+									cx={tooltipLeft}
+									cy={tooltipTop + 1}
+									r={4}
+									fill="black"
+									fillOpacity={0.1}
+									stroke="black"
+									strokeOpacity={0.1}
+									strokeWidth={2}
+									pointerEvents="none"
+								/>
+								<circle
+									cx={tooltipLeft}
+									cy={tooltipTop}
+									r={4}
+									fill={accentColorDark}
+									stroke="white"
+									strokeWidth={2}
+									pointerEvents="none"
+								/>
+							</g>
+						)}
+					</svg>
+				)}
 				{tooltipData && (
 					<div>
 						<TooltipWithBounds
