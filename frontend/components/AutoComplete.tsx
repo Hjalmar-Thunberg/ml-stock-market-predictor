@@ -1,19 +1,15 @@
 import React, { useState } from "react";
 import Select from "react-select";
-import axios from "axios";
+import api from "../api";
 
-function grabDataForSelected(selectedOption: { value: unknown }) {
-	axios({
-		url: `http://localhost:8000/get-model-data/${selectedOption.value}`,
-		method: "GET",
-		headers: {
-			"Access-Control-Allow-Origin": "*",
-		},
-		proxy: {
-			host: "127.0.0.1",
-			port: 8080,
-		},
-	})
+type Props = {
+	label: string;
+	value: string;
+};
+
+async function grabDataForSelected({ value }: Props) {
+	await api
+		.get(`get-model-data/${value}/`)
 		.then((response) => {
 			console.log(response.data.Close);
 			const res = [];

@@ -16,11 +16,11 @@ import json
 # 		kwargs['content_type'] = 'application/json'
 # 		super(JSONResponse, self).__init__(content, **kwargs)
 
-class IsAuthenticated(permissions.IsAuthenticated):
-	def has_permission(self, request, view):
-		if request.method == 'OPTIONS':
-			return True
-		return super(IsAuthenticated, self).has_permission(request, view)
+# class IsAuthenticated(permissions.IsAuthenticated):
+# 	def has_permission(self, request, view):
+# 		if request.method == 'OPTIONS':
+# 			return True
+# 		return super(IsAuthenticated, self).has_permission(request, view)
 
 def get_df_from_table(table_name):
 	"""
@@ -35,14 +35,15 @@ def get_df_from_table(table_name):
 	return None
 
 def get_model_data(request, table_name):
+	print(request)
+	if request.method == "OPTIONS":
+		return HttpResponse(status=status.HTTP_200_OK)
+
 	if request.method == "GET":
+		print(table_name)
 		stock_data = get_df_from_table(table_name)
-		#get from sqlite db
-		# add df to jsson meto
-		#make sure is json format i guess
 		stock_data = stock_data.to_json()
-		#return jsonresponse and status
-		return JsonResponse(json.loads(stock_data), safe=False)
+		return JsonResponse(json.loads(stock_data), safe=False, status=status.HTTP_200_OK)
 
 # api calls for get/post no key req
 # for prediction models using python objects 
