@@ -22,6 +22,9 @@ import json
 # 			return True
 # 		return super(IsAuthenticated, self).has_permission(request, view)
 
+def test(request):
+	pass
+
 def get_df_from_table(table_name):
 	"""
 	Searches in the dirty data db for the specified table (table_name).
