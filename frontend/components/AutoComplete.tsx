@@ -9,7 +9,7 @@ type Props = {
 
 async function grabDataForSelected({ value }: Props) {
 	await api
-		.get(`get-model-data/${value}/`)
+		.get(`get-pred/${value}/`)
 		.then((response) => {
 			const res = response.data.Close;
 			const data = [];

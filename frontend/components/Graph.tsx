@@ -45,7 +45,7 @@ const bisectDate = bisector<GraphStock, Date>((d) => new Date(d.date)).left;
 
 const getInitialData = async (): Promise<GraphStock[]> => {
 	let data: GraphStock[] = [];
-	await api.get("get-model-data/AAPL/").then((response) => {
+	await api.get("get-pred/AAPL/").then((response) => {
 		const res = response.data.Close;
 		for (const i in res) {
 			const v: GraphStock = {
