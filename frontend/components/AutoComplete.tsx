@@ -9,22 +9,26 @@ type Props = {
 
 async function grabDataForSelected({ value }: Props) {
 	await api
-		.get(`get-model-data/${value}/`)
+		.get(`get-pred/${value}/`)
 		.then((response) => {
-			console.log(response.data.Close);
-			const res = [];
-			for (const i in response.data.Close) {
-				res.push(i);
+			const res = response.data.Close;
+			const data = [];
+			for (const i in res) {
+				const v = {
+					date: response.data.Date[i].split(" ")[0],
+					close: res[i],
+				};
+				data.push(v);
 			}
-			console.log(res.slice(res.length - 100, res.length));
+			return data.slice(data.length - 100, data.length);
 		})
 		.catch((err) => {
 			console.log(err);
 		});
 }
 
-export const AutoComplete = () => {
-	const [selectedOption, setSelectedOption] = useState<any>(null);
+export const AutoComplete = ({ setData }) => {
+	const [selectedOption, setSelectedOption] = useState<any>();
 
 	return (
 		<div className="App">
@@ -32,7 +36,7 @@ export const AutoComplete = () => {
 				defaultValue={selectedOption}
 				onChange={(selectedOption) => {
 					setSelectedOption(selectedOption);
-					grabDataForSelected(selectedOption);
+					setData(grabDataForSelected(selectedOption));
 				}}
 				options={options}
 			/>

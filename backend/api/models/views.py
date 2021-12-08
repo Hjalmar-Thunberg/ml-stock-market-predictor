@@ -22,6 +22,21 @@ import json
 # 			return True
 # 		return super(IsAuthenticated, self).has_permission(request, view)
 
+def get_pred(request, table_name):
+	print("it works wooho get_pred      ", table_name)
+	return HttpResponse(status=status.HTTP_200_OK)
+
+def admin_train(request, stock_symbol):
+	print("it works wooho  admin_train  ", stock_symbol)
+	return HttpResponse(status=status.HTTP_200_OK)
+
+def admin_models(request, stock_symbol):
+	print("it works wooho admin_models  ", stock_symbol)
+	return HttpResponse(status=status.HTTP_200_OK)
+
+def test(request):
+	pass
+
 def get_df_from_table(table_name):
 	"""
 	Searches in the dirty data db for the specified table (table_name).

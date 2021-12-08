@@ -2,7 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-
+# from start_up import start
 
 def main():
     """Run administrative tasks."""
@@ -19,4 +19,6 @@ def main():
 
 
 if __name__ == '__main__':
+    #start method will be used to run data fethcing/cleaning/validation/prep once system is "complete"
+    # start()
     main()
