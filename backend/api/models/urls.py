@@ -21,6 +21,6 @@ urlpatterns = [
     url(r'^predModels/$',views.task_list),
     url(r'^test/$',views.test),
     url(r'^get-pred/(?P<table_name>\w{0,50})/$',views.get_pred),
-    url(r'^admin/train/(?P<stock_symbol>\w{0,50})/$',views.admin_train),
-    url(r'^admin/models/(?P<stock_symbol>\w{0,50})/$',views.admin_models),
+    url(r'^train/(?P<stock_symbol>\w{0,50})/$',views.admin_train),
+    url(r'^models/(?P<stock_symbol>\w{0,50})/$',views.admin_models),
 ]
