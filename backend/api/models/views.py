@@ -24,12 +24,15 @@ import json
 
 def get_pred(request, table_name):
 	print("it works wooho get_pred      ", table_name)
+	return HttpResponse(status=status.HTTP_200_OK)
 
 def admin_train(request, stock_symbol):
 	print("it works wooho  admin_train  ", stock_symbol)
+	return HttpResponse(status=status.HTTP_200_OK)
 
 def admin_models(request, stock_symbol):
 	print("it works wooho admin_models  ", stock_symbol)
+	return HttpResponse(status=status.HTTP_200_OK)
 
 def test(request):
 	pass
