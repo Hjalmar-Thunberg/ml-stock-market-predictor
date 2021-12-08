@@ -43,7 +43,7 @@ class DataFetcher:
         self._conn.close()
         self.logger.close()
 
-    def fetch_stock_data(self, stock_file):
+    def fetch_all_stocks(self, stock_file):
         """ 
         Fetches given data from a csv file.
         Params:
@@ -57,10 +57,18 @@ class DataFetcher:
 
             # fetch all data from yahoo for each given stock
             for stock in tqdm(stocks, position=0, leave=True):
-                try:
-                    df = pdr.DataReader(stock[0], data_source='yahoo', start=datetime.now()-timedelta(days=365*10), end=datetime.now())
-                    df.columns = df.columns.str.replace(" ", "")
-                    df.to_sql(stock[0], self._conn, if_exists='replace')
-                    self.logger.log(f'Fetched data for {stock[0]}', self.logger.urgency.LOW)
-                except Exception as e:
-                    self.logger.log(f'{type(e)}: {e}, could not fetch data for {stock[0]}', self.logger.urgency.HIGH) # TODO: this doesn't work
+                self.fetch_a_stock(stock[0])
+    
+    def fetch_a_stock(self, stock_name):
+        """"
+        Fetches given data from a specific stock name.
+        Params:
+            stock_name: The string name of a stock.
+        """
+        try:
+            df = pdr.DataReader(stock_name, data_source='yahoo', start=datetime.now()-timedelta(days=365*10), end=datetime.now())
+            df.columns = df.columns.str.replace(" ", "")
+            df.to_sql(stock_name, self._conn, if_exists='replace')
+            self.logger.log(f'Fetched data for {stock_name}', self.logger.urgency.LOW)
+        except Exception as e:
+            self.logger.log(f'{type(e)}: {e}, could not fetch data for {stock_name}', self.logger.urgency.HIGH) # TODO: this doesn't work
