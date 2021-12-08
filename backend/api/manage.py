@@ -19,5 +19,6 @@ def main():
 
 
 if __name__ == '__main__':
+    #start method will be used to run data fethcing/cleaning/validation/prep once system is "complete"
     # start()
     main()

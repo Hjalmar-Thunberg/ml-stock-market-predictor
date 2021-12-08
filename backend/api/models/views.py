@@ -22,6 +22,15 @@ import json
 # 			return True
 # 		return super(IsAuthenticated, self).has_permission(request, view)
 
+def get_pred(request):
+	print("it works wooho get_pred")
+
+def admin_train(request, stock_symbol):
+	print("it works wooho  admin_train  ", stock_symbol)
+
+def admin_models(request, stock_symbol):
+	print("it works wooho admin_models  ", stock_symbol)
+
 def test(request):
 	pass
 

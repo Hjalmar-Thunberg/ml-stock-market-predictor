@@ -20,5 +20,7 @@ urlpatterns = [
     # path('api-auth/', include('rest_framework.urls'))
     url(r'^predModels/$',views.task_list),
     url(r'^test/$',views.test),
-    url(r'^get-model-data/(?P<table_name>\w{0,50})/$',views.get_model_data),
+    url(r'^get-pred/(?P<table_name>\w{0,50})/$',views.get_pred),
+    url(r'^admin/train/(?P<stock_symbol>\w{0,50})/$',views.admin_train),
+    url(r'^admin/models/(?P<stock_symbol>\w{0,50})/$',views.admin_models),
 ]
