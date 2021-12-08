@@ -12,12 +12,12 @@ const Home: NextPage = () => {
 				})
 			}}>Get Prediction Test</button>
 			<button onClick={() => {
-				api.get('admin/train/AAPL').then(response => {
+				api.get('train/AAPL').then(response => {
 					console.log(response.data)
 				})
 			}}>Admin Train Model</button>
 			<button onClick={() => {
-				api.get('admin/models/RBLX').then(response => {
+				api.get('models/RBLX').then(response => {
 					console.log(response.data)
 				})
 			}}>Admin Get Model</button>
