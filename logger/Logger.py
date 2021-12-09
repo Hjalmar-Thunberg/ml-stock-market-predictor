@@ -41,7 +41,7 @@ class Logger:
         # Store the current working directory from the calling file
         # If the logs dir does not exist, create it
         if not os.path.exists(self.LOGS_PATH) and self.cwd != self.LOGS_PATH:
-            os.mkdir('logs')
+            os.mkdir(self.LOGS_PATH)
             
         # If the current working dir is not ../logs change into it
         if self.cwd != self.LOGS_PATH:
