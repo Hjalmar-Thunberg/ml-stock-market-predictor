@@ -19,15 +19,13 @@ class Trainer:
     """"
     A class designed to train a model.
     """
-    def __init__(self, num_nodes):
+    def __init__(self):
 
         self.ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.MODELS_PATH = os.path.join(self.ROOT_DIR, 'models')
         self.cwd = os.getcwd()
         
         self.logger = Logger('logs_model.db')
-        self.cleaner = DataCleaner()
-        self.num_nodes = num_nodes
 
     def accuracy_calc(self, percentage, y_test, predictions):
         """ Calculates the accuracy of our predictions against the actual values within a given percentile """
@@ -59,16 +57,16 @@ class Trainer:
 
         return os.path.join(self.MODELS_PATH, path, '_v' + str(version_count))
 
-    def train_all_stocks(self, save=False):
+    def train_all_stocks(self, num_nodes, save=False):
         """ 
         Train models using keras LSTM for all stocks in cleanData db.
         """
         cleaned_stocks = self.cleaner.get_all_cleaned_stocks()
         # Iterate over each table
         for stock_name in cleaned_stocks:
-            self.train_a_stock(stock_name, save)    
+            self.train_a_stock(stock_name, num_nodes, save)    
 
-    def train_a_stock(self, stock_name, save=False):
+    def train_a_stock(self, stock_name, num_nodes, save=False):
         """ 
         Trains a model using keras LSTM for a specific stock.
         Stores the model, prediction results and the accuracy in the models folder.
@@ -81,7 +79,7 @@ class Trainer:
         model = Sequential()
 
         # Run a layer with 500 nodes, drop 10% when done return whole output
-        model.add(LSTM(self.num_nodes, return_sequences=False))
+        model.add(LSTM(num_nodes, return_sequences=False))
         model.add(Dropout(0.1))
 
         # Run a fourth layer with 25 nodes and 10% dropout
@@ -132,6 +130,8 @@ class Trainer:
             os.chdir(path)
 
             with open(os.path.join(os.getcwd(), path, 'stats.txt'), 'w') as f:
+                f.write('num_nodes: ' + str(num_nodes) + '\n')
+
                 for acc in accs:
                     f.write('acc: ' + str(acc) + '\n')
 
@@ -140,3 +140,5 @@ class Trainer:
 
             os.chdir(self.cwd)
             self.logger.log(f'Trained model for {stock_name}, stored in {path}')
+
+        return accs
