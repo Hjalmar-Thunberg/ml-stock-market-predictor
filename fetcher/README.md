@@ -30,25 +30,20 @@ while True:
 os.chdir(cwd)
 if not basepath in sys.path:
     sys.path.insert(0, basepath)
-from fetcher.Fetcher import fetcher
+from fetcher.Fetcher import DataFetcher
 ```
 
-2. Import the fetcher as a class
-```python
-import fetcher.Fetcher from DataFetcher
-```
-
-3. Create the Fetcher instance
+2. Create the Fetcher instance:
 ```python
 fetcher = DataFetcher()
 ```
-4. Fetch either one stock or all saved ones by using one of the functions
+3. Fetch either one or all saved stocks by using one of the functions:
 ```python
 fetcher.fetch_a_stock('stock_name')
 fetcher.fetch_all_stocks()
 ```
 
-5. When the Fetcher is done, to preserve resources call:
+4. When the Fetcher is done, to preserve resources call:
 ```python
 fetcher.close()
 ```
