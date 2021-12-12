@@ -75,3 +75,79 @@ Planning week
 - 
 
 <br />
+
+### Group 3 --- Week 4 (29-5 Dec)
+<hr />
+
+> Delegated to: Christian
+- 
+
+<br />
+
+> Delegated to: Hjalmar
+- Add store functionality to prediction models for
+- Finish fetcher component README
+- Add visual progress bar when fetching data
+
+<br />
+
+> Delegated to: Hugo
+- 
+
+<br />
+
+> Delegated to: Kardo
+- 
+
+<br />
+
+### Group 3 --- Week 5 (6-12 Dec)
+<hr />
+
+> Delegated to: Christian
+- 
+
+<br />
+
+> Delegated to: Hjalmar
+- Add fetching for one and all stored stocks to fetcher component
+- Remake prediction model to a fully working trainer class
+- Add cleaning for one and all stored stocks to cleaner component
+- Fixed imports and structures for project to work for the pipeline
+- Add readme to trainer and cleaner components
+- Add getter to cleaner so trainer can get prepared data to train on
+
+<br />
+
+> Delegated to: Hugo
+- 
+
+<br />
+
+> Delegated to: Kardo
+- 
+
+<br />
+
+### Group 3 --- Week 6 (13-19 Dec)
+<hr />
+
+> Delegated to: Christian
+- 
+
+<br />
+
+> Delegated to: Hjalmar
+- 
+
+<br />
+
+> Delegated to: Hugo
+- 
+
+<br />
+
+> Delegated to: Kardo
+- 
+
+<br />
