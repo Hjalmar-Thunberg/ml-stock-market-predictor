@@ -80,7 +80,11 @@ Planning week
 <hr />
 
 > Delegated to: Christian
-- 
+- Convert reactjs frontend into typescript to allow graph to work properly
+- Create axios component to allow API calls to backend
+- Configure CORS headers in frontend and backend components
+- Create ROOT_DIR variable in Logger.py that allows for simpler pathing to databases and root directories
+- Add initial data cleaner class
 
 <br />
 
