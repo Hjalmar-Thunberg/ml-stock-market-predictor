@@ -9,6 +9,37 @@ import sqlite3
 import os
 import pandas as pd
 import json
+import sys
+
+
+def get_dir(folder_name):
+    cwd = os.getcwd()
+    basepath = ''
+    while True:
+        if os.path.exists(folder_name):
+            break
+        os.chdir('..')
+        basepath = os.path.join(basepath, '..')
+    os.chdir(cwd)
+    if not basepath in sys.path:
+        sys.path.insert(0, basepath)
+
+get_dir("logger")
+get_dir("cleaner")
+get_dir("fetcher")
+get_dir("trainer")
+
+from logger.Logger import Logger
+from cleaner.Cleaner import DataCleaner
+from fetcher.Fetcher import DataFetcher
+from trainer.Trainer import Trainer
+
+logger = Logger("logs_backend.db")
+cleaner = DataCleaner()
+fetcher = DataFetcher()
+trainer = Trainer()
+
+
 
 # class JSONResponse(HttpResponse):
 # 	def __init__(self, data, **kwargs):
@@ -27,12 +58,14 @@ def get_pred(request, table_name):
 	return HttpResponse(status=status.HTTP_200_OK)
 
 def admin_train(request, stock_symbol):
-	print("it works wooho  admin_train  ", stock_symbol)
-	return HttpResponse(status=status.HTTP_200_OK)
+	#acc = trainer.train_a_stock(stock_symbol, 50)
+	acc = "test"
+	print( stock_symbol, "  model acc: ", acc)
+	return JsonResponse(json.loads(acc), safe=False, status=status.HTTP_200_OK)
 
 def admin_models(request, stock_symbol):
 	print("it works wooho admin_models  ", stock_symbol)
-	return HttpResponse(status=status.HTTP_200_OK)
+	return HttpResponse(status=status.HTTP_200_OK, )
 
 def test(request):
 	pass

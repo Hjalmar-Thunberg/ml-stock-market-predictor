@@ -5,6 +5,17 @@ name = "pypi"
 
 [packages]
 django = "*"
+matplotlib = "*"
+pandas-datareader = "*"
+numpy = "*"
+pandas = "*"
+tensorflow = "*"
+sklearn = "*"
+keras = "*"
+djangorestframework = "*"
+django-cors-headers = "*"
+django-admin = "*"
+tqdm = "*"
 
 [dev-packages]
 
