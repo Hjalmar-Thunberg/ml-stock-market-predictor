@@ -105,7 +105,9 @@ Planning week
 <hr />
 
 > Delegated to: Christian
-- 
+- Remake prediction model to a fully working trainer class
+- Assist with database and data folder pathing in fetcher, cleaner, trainer components
+- Update trainer to return captured values for accuracy, predictions, and real values
 
 <br />
 
