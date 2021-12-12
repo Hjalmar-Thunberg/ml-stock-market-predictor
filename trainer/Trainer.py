@@ -1,18 +1,9 @@
-import math                                    # mathematical functions        https://docs.python.org/3/library/math.html
-import pandas_datareader as web                # data reader for panda         https://pandas-datareader.readthedocs.io/en/latest/
-import numpy as np                             # numerical data in python      https://numpy.org/doc/stable/user/absolute_beginners.html
-import pandas as pd                            # data analysis toolkit         https://pandas.pydata.org/pandas-docs/stable/user_guide/10min.html
 import tensorflow.keras.backend as K
-import matplotlib.pyplot as plt                # plotting data in figures      https://matplotlib.org/2.0.2/users/pyplot_tutorial.html
-from sklearn.preprocessing import MinMaxScaler # raw data utility functions    https://scikit-learn.org/stable/modules/preprocessing.html
 from keras import metrics as metrics
-import tensorflow as tf
-import sqlite3
 import os
 from cleaner.Cleaner import DataCleaner
 from logger.Logger import Logger
 from keras.models import Sequential            # input output sequence of data https://www.tensorflow.org/guide/keras/sequential_model
-from datetime import datetime, timedelta       # for manipulating dates        https://docs.python.org/3/library/datetime.html
 from keras.layers import Dense, LSTM, Dropout  # layers for neural network     https://keras.io/api/layers/
 
 class Trainer:
@@ -25,6 +16,7 @@ class Trainer:
         self.MODELS_PATH = os.path.join(self.ROOT_DIR, 'models')
         self.cwd = os.getcwd()
         
+        self.cleaner = DataCleaner()
         self.logger = Logger('logs_model.db')
 
     def accuracy_calc(self, percentage, y_test, predictions):
