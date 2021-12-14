@@ -144,7 +144,9 @@ Planning week
 <br />
 
 > Delegated to: Hjalmar
-- 
+- Update component diagram
+- Fix fetcher when adding new stock
+- Create presentation for fair
 
 <br />
 
