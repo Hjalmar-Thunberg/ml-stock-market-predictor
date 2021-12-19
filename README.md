@@ -139,7 +139,11 @@ Planning week
 <hr />
 
 > Delegated to: Christian
-- 
+- Update trainer component to make it more flexible (not instantiate it with a number of nodes)
+- Update trainer component to return model accuracy, predictions, and the actual closing values
+- Add helper functions to get model data (version, accuracies, predictions, amount of nodes, etc.)
+- Create UI using the django framework (due to issues with CORS), includes text-views for model data, dropdown for available models to predict with, and a graph to compare predicted vs actual close prices.
+- Add file that keeps track of current version of the models in use, and ability to add/update models to that file.
 
 <br />
 
