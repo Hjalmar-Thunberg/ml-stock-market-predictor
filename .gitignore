@@ -1,1 +1,5 @@
 .DS_Store
+.vscode/
+
+logs/
+data/models_in_use.txt

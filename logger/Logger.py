@@ -49,7 +49,7 @@ class Logger:
         
         # Establish a database connection if it does not exist
         if self._conn is None:
-            self._conn = sqlite3.connect(self.database_name)
+            self._conn = sqlite3.connect(self.database_name, check_same_thread=False)
             
         # Create the cursor from the connection
         self._cursor = self._conn.cursor()
