@@ -22,3 +22,7 @@
 `python manage.py runserver [PORT NUMBER]`
 
 Port number is optional, it would default to port 8000 if you don't specify.
+
+**Build and run docker image**
+`docker build --tag python-django .`
+`docker run --publish 8000:8000 python-django`
