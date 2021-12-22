@@ -159,7 +159,8 @@ Planning week
 <br />
 
 > Delegated to: Hugo
-- 
+- Update backend to work with django UI(update api endpoints, urls, methods)
+- Add file that keeps track of current version of the models in use, and ability to add/update models to that file.
 
 <br />
 
