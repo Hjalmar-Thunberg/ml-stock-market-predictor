@@ -1,10 +1,12 @@
 import tensorflow.keras.backend as K
 from keras import metrics as metrics
 import os
-from cleaner.Cleaner import DataCleaner
-from logger.Logger import Logger
+import sys
 from keras.models import Sequential            # input output sequence of data https://www.tensorflow.org/guide/keras/sequential_model
 from keras.layers import Dense, LSTM, Dropout  # layers for neural network     https://keras.io/api/layers/
+from cleaner.Cleaner import DataCleaner
+from fetcher.Fetcher import DataFetcher
+from logger.Logger import Logger
 
 class Trainer:
     """"
@@ -17,6 +19,7 @@ class Trainer:
         self.cwd = os.getcwd()
         
         self.cleaner = DataCleaner()
+        self.fetcher = DataFetcher()
         self.logger = Logger('logs_model.db')
 
     def accuracy_calc(self, percentage, y_test, predictions):
@@ -65,6 +68,11 @@ class Trainer:
         """
         # Get training and testing data for a specific stock
         print(f'Training data for {stock_name}')
+        try:
+            self.cleaner._get_df_from_table(stock_name)
+        except Exception as e:
+            self.fetcher.fetch_a_stock(stock_name)
+            self.cleaner.clean_a_stock(stock_name)
         x_train, y_train, x_test, y_test = self.cleaner.get_prep_data(stock_name)
 
         # Build LSTM model
@@ -133,4 +141,8 @@ class Trainer:
             os.chdir(self.cwd)
             self.logger.log(f'Trained model for {stock_name}, stored in {path}')
 
-        return accs
+        return {
+            "accuracy": accs,
+            "predictions": predictions[-5:],
+            "realValues": y_test[-5:]
+        }

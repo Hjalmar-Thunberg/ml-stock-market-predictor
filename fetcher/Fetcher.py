@@ -38,8 +38,8 @@ class DataFetcher:
         
         # Establish a database connection if it does not exist
         if self._conn is None:
-            self._conn = sqlite3.connect(self.db_name)
-            self.logger.log(f'Connected to {self.db_name} in {self.DATA_PATH}', self.logger.urgency.LOW)    
+            self._conn = sqlite3.connect(self.db_name, check_same_thread=False)
+            #self.logger.log(f'Connected to {self.db_name} in {self.DATA_PATH}', self.logger.urgency.LOW)    
         
         # Create the cursor from the connection
         self._cursor = self._conn.cursor()
@@ -72,21 +72,22 @@ class DataFetcher:
         """"
         Fetches given data from a specific stock name.
         """
-        try:
-            df = pdr.DataReader(stock_name, data_source='yahoo', start=datetime.now()-timedelta(days=365*10), end=datetime.now())
-            df.columns = df.columns.str.replace(" ", "")
+        df = pdr.DataReader(stock_name, data_source='yahoo', start=datetime.now()-timedelta(days=365*10), end=datetime.now())
+        df.columns = df.columns.str.replace(" ", "")
+        if df is not None:
             df.to_sql(stock_name, self._conn, if_exists='replace')
+            print(f'Fetched data for {stock_name}')
+            self.logger.log(f'Fetched data for {stock_name}', self.logger.urgency.LOW)
+        else: self.logger.log(f'could not fetch data for {stock_name}', self.logger.urgency.HIGH)
 
+
+    def add_new_stock(self, stock_name):
             os.chdir(self.DATA_PATH)
-            with open(self.stock_file, 'a') as f:
+            with open(self.stock_file, 'a+') as f:
                 # Reads csv file into a list
                 reader = csv.reader(f)
                 stocks = list(reader)
+
                 if not stock_name in stocks:
                     f.write(stock_name + '\n')
-
             os.chdir(self.cwd)
-            self.logger.log(f'Fetched data for {stock_name}', self.logger.urgency.LOW)
-
-        except Exception as e:
-            self.logger.log(f'{type(e)}: {e}, could not fetch data for {stock_name}', self.logger.urgency.HIGH) # TODO: this doesn't work

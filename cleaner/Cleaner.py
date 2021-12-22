@@ -179,8 +179,8 @@ class DataCleaner:
         
         # Establish a database connection if it does not exist
         if self._conn_clean_db or self._conn_dirty_db is None:
-            self._conn_clean_db = sqlite3.connect(self.clean_data_db)
-            self._conn_dirty_db = sqlite3.connect(self.dirty_data_db)
+            self._conn_clean_db = sqlite3.connect(self.clean_data_db, check_same_thread=False)
+            self._conn_dirty_db = sqlite3.connect(self.dirty_data_db, check_same_thread=False)
             self.logger.log(f'Connected to {self.clean_data_db} in {self.DATA_PATH}', self.logger.urgency.LOW)
             self.logger.log(f'Connected to {self.dirty_data_db} in {self.DATA_PATH}', self.logger.urgency.LOW)   
         

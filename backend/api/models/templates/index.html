@@ -1,0 +1,15 @@
+
+<label for="stocks">Select a stock</label>
+<form name="stocks" action="" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="View Predictions"/>
+</form>
+<!-- <select name="stocks" id="stocks-select" onselect="">
+    {% for stock in list_of_stock_models %}
+        <option value={ stock }>{{ stock }}</option>
+    {% endfor %}
+</select> -->
+<ul>
+
+</ul>

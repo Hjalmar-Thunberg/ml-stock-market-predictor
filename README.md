@@ -96,7 +96,8 @@ Planning week
 <br />
 
 > Delegated to: Hugo
-- 
+- Update prediction model with added metrics and accuracy calculation method.
+- update parameters for LSTM model for higher accuracy
 
 <br />
 
@@ -126,7 +127,10 @@ Planning week
 <br />
 
 > Delegated to: Hugo
-- 
+- Debbugging and general fixes added to fetcher, logger and cleaner (mainly sqlite3 threaded issue and general if/else logic)
+- Update dependencies in backend to support django 4.0
+- Add functionality to api calls in backend
+- Update pipenv lockfile with correct and up-to-date dependencies
 
 <br />
 

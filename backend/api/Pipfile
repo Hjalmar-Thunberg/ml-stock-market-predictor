@@ -16,6 +16,8 @@ djangorestframework = "*"
 django-cors-headers = "*"
 django-admin = "*"
 tqdm = "*"
+plotly = "*"
+scipy = "*"
 
 [dev-packages]
 
