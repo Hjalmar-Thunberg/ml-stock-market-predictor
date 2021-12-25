@@ -15,5 +15,4 @@ class PredictionModelAdmin(admin.ModelAdmin):
         'acc_90',
         'acc_95',
         'acc_99')
-    fields = ['version']
-        
+    fields = ['for_stock', 'version']
