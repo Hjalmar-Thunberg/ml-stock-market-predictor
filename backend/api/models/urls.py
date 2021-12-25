@@ -18,7 +18,7 @@ urlpatterns = [
     # path('', include(router.urls)),
     # path('api-auth/', include('rest_framework.urls'))
     path('', views.index, name='index'),
-    path('predModels/',views.task_list),
+    # path('predModels/',views.task_list),
     re_path(r'update/(?P<stock_symbol>\w{0,50})/(?P<version>\w{0,50})/',views.update_model),
     re_path(r'get-pred/(?P<stock_symbol>\w{0,50})/',views.get_pred),
     re_path(r'train/(?P<stock_symbol>\w{0,50})/(?P<num_nodes>\w{0,50})/(?P<should_save>\w{0,5})/',views.admin_train),

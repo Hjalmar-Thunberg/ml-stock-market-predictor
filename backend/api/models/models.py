@@ -1,14 +1,15 @@
 from django.db import models
-import uuid
 
-class PredModel(models.Model):
-    id = str(models.UUIDField(
-         primary_key = True,
-         default = uuid.uuid4,
-         editable = False))
+class PredictionModel(models.Model):
+    PATH_CHOICES = []
 
-    title = models.CharField(max_length = 200)
-    description = models.TextField()
-  
-    def __str__(self):
-        return self.title
+    version = models.IntegerField()
+    path = models.CharField(max_length=1, choices=PATH_CHOICES)
+    for_stock = models.CharField(max_length=200, unique=True)
+    acc_50 = models.DecimalField(max_digits=4, decimal_places=2)
+    acc_60 = models.DecimalField(max_digits=4, decimal_places=2)
+    acc_70 = models.DecimalField(max_digits=4, decimal_places=2)
+    acc_80 = models.DecimalField(max_digits=4, decimal_places=2)
+    acc_90 = models.DecimalField(max_digits=4, decimal_places=2)
+    acc_95 = models.DecimalField(max_digits=4, decimal_places=2)
+    acc_99 = models.DecimalField(max_digits=4, decimal_places=2)

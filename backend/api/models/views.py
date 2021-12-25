@@ -1,21 +1,12 @@
 from django import forms
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.renderers import JSONRenderer
-from rest_framework.parsers import JSONParser
-from rest_framework import status, permissions
-from .models import PredModel
-from .serializers import Serializer
 from scipy.ndimage.interpolation import shift
 import sqlite3
-import random
 import numpy as np
 import pandas as pd
 import os
-import json
 import sys
-import datetime
 import plotly
 import plotly.express as px
 import tensorflow as tf
@@ -99,20 +90,6 @@ def get_stock_model_data(stock_symbol, version: int = 0) -> tuple:
                     p.append(round(float(ls[1]), 2))
 
         return tuple([mv, nn, a, p])
-
-
-# class JSONResponse(HttpResponse):
-# 	def __init__(self, data, **kwargs):
-# 		content = JSONRenderer().render(data)
-# 		kwargs['content_type'] = 'application/json'
-# 		super(JSONResponse, self).__init__(content, **kwargs)
-
-# class IsAuthenticated(permissions.IsAuthenticated):
-# 	def has_permission(self, request, view):
-# 		if request.method == 'OPTIONS':
-# 			return True
-# 		return super(IsAuthenticated, self).has_permission(request, view)
-
 
 def get_dropdown_options():
     return tuple([(key, key) for key in list(models_in_use.keys())])
@@ -333,56 +310,5 @@ def admin_models(request, stock_symbol):
 
     print("it works wooho admin_models  ", stock_symbol)
     return HttpResponse(
-        status=status.HTTP_200_OK,
+        status=200,
     )
-
-
-def test(request):
-    # fetcher.fetch_all_stocks()
-    # cleaner.clean_all_stocks()
-    # trainer.train_all_stocks(100, True)
-    acc = "woo"
-    return JsonResponse(acc, safe=False, status=status.HTTP_200_OK)
-
-
-# for prediction models using python objects
-@csrf_exempt
-def task_list(request):
-    if request.method == "GET":
-        task = PredModel.objects.all()
-        task_serializer = Serializer(task, many=True)
-        return JsonResponse(task_serializer.data)
-
-    elif request.method == "POST":
-        task_data = JSONParser().parse(request)
-        task_serializer = Serializer(data=task_data)
-        if task_serializer.is_valid():
-            task_serializer.save()
-            return JsonResponse(task_serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(task_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# api calls for get/put/delete with pk "private key"
-# for prediction models using python objects
-@csrf_exempt
-def task_detail(request, pk):
-    try:  # cheks predmodel.objects for a specific instance
-        task = PredModel.objects.get(pk=pk)
-    except PredModel.DoesNotExist:
-        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == "GET":
-        task_serializer = Serializer(task, many=False)
-        return JsonResponse(task_serializer.data)
-
-    elif request.method == "PUT":
-        task_data = JSONParser().parse(request)
-        task_serializer = Serializer(task, data=task_data)
-        if task_serializer.is_valid():
-            task_serializer.save()
-            return JsonResponse(task_serializer.data)
-        return JsonResponse(task_serializer.errors, status=status.HTTP_400_BAD_REQUESTS)
-
-    elif request.method == "DELETE":
-        task.delete()
-        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
