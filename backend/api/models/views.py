@@ -48,11 +48,14 @@ ROOT_DIR = os.path.dirname(
 )
 MODELS_DIR = os.path.join(ROOT_DIR, "models")
 PREDICTIONS_DIR = os.path.join(ROOT_DIR, "data")
-# { 'AAPL': 'Path/to/apple/_v1'}
-models_in_use = {}
 
+class StocksDropdownForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        dropdown_options = tuple([(model.for_stock, model.for_stock) for model in list(PredictionModel.objects.all())])
+        super(StocksDropdownForm, self).__init__(*args, **kwargs)
+        self.fields["stocks"] = forms.ChoiceField(choices=dropdown_options)
 
-def get_all_stock_model_versions_data(stock_symbol) -> list:
+def get_all_stock_model_versions_data(request, stock_symbol) -> list:
     model_data = []
     folder = list(
         filter(
@@ -62,7 +65,10 @@ def get_all_stock_model_versions_data(stock_symbol) -> list:
     )[0]
     for version in os.listdir(os.path.join(MODELS_DIR, folder)):
         model_data.append(get_stock_model_data(stock_symbol, version=int(version[2:])))
-    return JsonResponse(model_data, safe=False, status=200)
+    response = {
+        "model_data": model_data
+    }
+    return JsonResponse(response, status=200)
 
 
 def get_stock_model_data(stock_symbol, version: int = 0) -> tuple:
@@ -92,25 +98,7 @@ def get_stock_model_data(stock_symbol, version: int = 0) -> tuple:
 
         return tuple([mv, nn, a, p])
 
-def get_dropdown_options():
-    return tuple([(key, key) for key in list(models_in_use.keys())])
-
-
-class StocksDropdownForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        super(StocksDropdownForm, self).__init__(*args, **kwargs)
-        self.fields["stocks"] = forms.ChoiceField(choices=get_dropdown_options())
-
-
-def populate_dropdown():
-    with open(os.path.join(PREDICTIONS_DIR, "models_in_use.txt"), "r") as f:
-        for pair in f.readlines():
-            (key, value) = pair.split("=")
-            models_in_use[key] = value
-
-
 def index(request):
-    populate_dropdown()
     form = StocksDropdownForm()
     if request.method == "POST":
         form = StocksDropdownForm(request.POST)
@@ -119,15 +107,6 @@ def index(request):
             return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock}")
     errors = form.errors or None
     return render(request, "index.html", {"form": form, "errors": errors})
-
-
-def get_model_in_use_path(stock):
-    with open(os.path.join(PREDICTIONS_DIR, "models_in_use.txt"), "a+") as f:
-        f.seek(0)
-        for line in f.readlines():
-            if stock in line:
-                return line.split("=")[1]
-    return ""
 
 
 def get_model_path(stock_symbol: str, version=0) -> str:
@@ -147,12 +126,6 @@ def get_model_path(stock_symbol: str, version=0) -> str:
         model_path = os.path.join(MODELS_DIR, folder, model_version)
         return model_path
     return ""
-
-
-# This should run every 24 hours and have option for force refresh
-def prepare_daily_data():
-    fetcher.fetch_all_stocks()
-    cleaner.clean_all_stocks()
 
 
 def get_pred(request, stock_symbol):
@@ -242,63 +215,21 @@ def get_pred(request, stock_symbol):
         return HttpResponseRedirect(f"http://localhost:8000/train/{stock_symbol}/100/True")
 
 
-def should_update_model_in_use_if_it_is_much_better_or_not_as_good(
-    stock_symbol: str, model_acc: list
-) -> bool:
+def should_update_model(stock_symbol: str, model_acc: list) -> bool:
     if get_model_path(stock_symbol) == "":
         return True
-    cur_model_acc = get_stock_model_data(
-        stock_symbol, int(models_in_use.get(stock_symbol).split(os.sep)[-1][2:])
-    )[2]
+    model = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
+    cur_model_acc = [model.acc_50, model.acc_60, model.acc_70, model.acc_80, model.acc_90, model.acc_95, model.acc_99]
     return [model_acc[i] >= cur_model_acc[i] for i in range(len(cur_model_acc))]
-
-
-# Add model to list of in-use models if doesnt exist
-def add_to_models_in_use(stock_symbol):
-    model_path = os.path.join(MODELS_DIR, stock_symbol + "_lstm_model", "_v1")
-    with open(os.path.join(PREDICTIONS_DIR, "models_in_use.txt"), "a+") as f:
-        f.seek(0)
-        models_in_use[stock_symbol] = model_path
-        to_write = f"{stock_symbol}={model_path}\n"
-        if stock_symbol not in [line.split("=")[0] for line in f.readlines()]:
-            f.write(to_write)
-
-
-# Update existing model version in list of in-use models
-def update_model_in_use(stock_symbol, path_to_new_model):
-    a = open(os.path.join(PREDICTIONS_DIR, "models_in_use.txt"), "a+")
-    a.seek(0)
-    lines = a.readlines()
-    a.close()
-
-    for line in lines:
-        if line.split("=")[0] == stock_symbol:
-            lines.pop(lines.index(line))
-
-    b = open(os.path.join(PREDICTIONS_DIR, "models_in_use.txt"), "w+")
-    b.seek(0)
-    for line in lines:
-        b.write(line)
-    to_write = f"{stock_symbol}={path_to_new_model}\n"
-    b.write(to_write)
-    b.close()
-
-
-def _admin_train(stock_symbol, num_nodes):
-    trainer.train_a_stock(stock_symbol, int(num_nodes), True)
-    add_to_models_in_use(stock_symbol)
-    return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock_symbol}")
 
 
 def admin_train(request, stock_symbol, num_nodes, should_save=False):
     save = True if should_save == "True" else False
     # Training on a new stock symbol that doesnt exist
     model_stats = trainer.train_a_stock(stock_symbol, int(num_nodes), save)
-    responseMSG = True  # json.dumps(should_update_model_in_use_if_it_is_much_better_or_not_as_good(stock_symbol, model_stats['accuracy']))
     # update current model to be newly trained one
     if save == True:
-        if get_model_in_use_path(stock_symbol) == "":
-            add_to_models_in_use(stock_symbol)
+        if get_model_path(stock_symbol) == "":
             accuracies = model_stats['accuracy']
             model_version = '1'
             model_path = get_model_path(stock_symbol, int(model_version))
@@ -336,19 +267,11 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
             pm.version = model_version
             pm.path = model_path
             pm.save()
-            update_model(request, stock_symbol, model_version)
 
-    return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock_symbol}")
-
-
-def update_model(request, stock_symbol, version):
-    file_path = get_model_path(stock_symbol, int(version))
-    update_model_in_use(stock_symbol, file_path)
-    return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock_symbol}")
-
-
-def admin_models(request, stock_symbol):
-    # if request.method == "GET":
-
-    print("it works wooho admin_models  ", stock_symbol)
-    return JsonResponse({}, status=200)
+        return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock_symbol}")
+    response = {
+        "should_update": should_update_model(stock_symbol, model_stats['accuracy']),
+        "accuracy": model_stats['accuracy'],
+        "predictions": model_stats['predictions']
+        }
+    return JsonResponse(response, status=200)
