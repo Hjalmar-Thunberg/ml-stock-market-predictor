@@ -139,12 +139,12 @@ def get_pred(request, stock_symbol):
         HttpResponseRedirect(f"http://localhost:8000/train/{stock_symbol}/100/True")
 
     if existing_model:
-        model_path = existing_model.path.strip()
+        version = existing_model.version
+        model_path = get_model_path(stock_symbol, version)
         current_model = tf.keras.models.load_model(model_path, compile=False)
         predictions = current_model.predict(x_test)
 
-        version = existing_model.version
-        p = get_stock_model_data(stock_symbol, int(version))[3]
+        p = get_stock_model_data(stock_symbol, version)[3]
         p = [pred[0] for pred in cleaner.rescale_data(predictions)][-100:]
         actual_values = cleaner._get_df_from_table(stock_symbol, True)
         actual_values = actual_values["Close"][-len(p) :].tolist()
@@ -239,8 +239,8 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
     if save == True:
         if not model_exists(stock_symbol):
             accuracies = model_stats['accuracy']
-            model_version = '1'
-            model_path = get_model_path(stock_symbol, int(model_version))
+            model_version = 1
+            model_path = get_model_path(stock_symbol, model_version)
             pm = PredictionModel(
                 for_stock=stock_symbol,
                 acc_50=accuracies[0] * 100,
@@ -251,7 +251,6 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
                 acc_95=accuracies[5] * 100,
                 acc_99=accuracies[6] * 100,
             )
-            pm.VERSIONS = [(str(i), str(i)) for i in range(1, int(model_version)+1)]
             pm.num_nodes = num_nodes
             pm.version = model_version
             pm.path = model_path
@@ -268,7 +267,6 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
             pm.acc_90 = accuracies[4] * 100
             pm.acc_95 = accuracies[5] * 100
             pm.acc_99 = accuracies[6] * 100
-            pm.VERSIONS = [(str(i), str(i)) for i in range(1, int(model_version)+1)]
             pm.num_nodes = num_nodes
             pm.version = model_version
             pm.path = model_path
