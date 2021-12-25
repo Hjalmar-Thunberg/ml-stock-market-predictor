@@ -7,6 +7,7 @@ class PredictionModelAdmin(admin.ModelAdmin):
     list_display = (
         'for_stock',
         'version',
+        'num_nodes',
         'acc_50',
         'acc_60',
         'acc_70',

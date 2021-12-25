@@ -7,6 +7,7 @@ class PredictionModel(models.Model):
     version = models.CharField(max_length=1, choices=VERSIONS, default='1')
     path = models.CharField(max_length=1, choices=PATH_CHOICES, default='')
     for_stock = models.CharField(max_length=200)
+    num_nodes = models.IntegerField()
     acc_50 = models.DecimalField(max_digits=4, decimal_places=2)
     acc_60 = models.DecimalField(max_digits=4, decimal_places=2)
     acc_70 = models.DecimalField(max_digits=4, decimal_places=2)
