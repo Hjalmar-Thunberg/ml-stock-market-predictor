@@ -223,13 +223,21 @@ def should_update_model(stock_symbol: str, model_acc: list) -> bool:
     return [model_acc[i] >= cur_model_acc[i] for i in range(len(cur_model_acc))]
 
 
+def model_exists(stock_symbol) -> bool:
+    try:
+        model = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
+        return model != None
+    except ObjectDoesNotExist:
+        return False
+
+
 def admin_train(request, stock_symbol, num_nodes, should_save=False):
     save = True if should_save == "True" else False
     # Training on a new stock symbol that doesnt exist
     model_stats = trainer.train_a_stock(stock_symbol, int(num_nodes), save)
     # update current model to be newly trained one
     if save == True:
-        if get_model_path(stock_symbol) == "":
+        if not model_exists(stock_symbol):
             accuracies = model_stats['accuracy']
             model_version = '1'
             model_path = get_model_path(stock_symbol, int(model_version))
@@ -243,8 +251,7 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
                 acc_95=accuracies[5] * 100,
                 acc_99=accuracies[6] * 100,
             )
-            pm.VERSIONS.append(tuple([model_version]*2))
-            pm.PATH_CHOICES.append((model_version, model_path))
+            pm.VERSIONS = [(str(i), str(i)) for i in range(1, int(model_version)+1)]
             pm.num_nodes = num_nodes
             pm.version = model_version
             pm.path = model_path
@@ -261,8 +268,7 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
             pm.acc_90 = accuracies[4] * 100
             pm.acc_95 = accuracies[5] * 100
             pm.acc_99 = accuracies[6] * 100
-            pm.VERSIONS.append(tuple([str(model_version)]*2))
-            pm.PATH_CHOICES.append((str(model_version), model_path))
+            pm.VERSIONS = [(str(i), str(i)) for i in range(1, int(model_version)+1)]
             pm.num_nodes = num_nodes
             pm.version = model_version
             pm.path = model_path
@@ -271,7 +277,7 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
         return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock_symbol}")
     response = {
         "should_update": should_update_model(stock_symbol, model_stats['accuracy']),
-        "accuracy": model_stats['accuracy'],
-        "predictions": model_stats['predictions']
+        # "accuracy": list(model_stats['accuracy']),
+        # "predictions": list(model_stats['predictions'])
         }
     return JsonResponse(response, status=200)
