@@ -308,6 +308,7 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
             )
             pm.VERSIONS.append(tuple([model_version]*2))
             pm.PATH_CHOICES.append((model_version, model_path))
+            pm.num_nodes = num_nodes
             pm.version = model_version
             pm.path = model_path
             pm.save()
@@ -315,18 +316,17 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
             accuracies = model_stats['accuracy']
             model_version = get_stock_model_data(stock_symbol)[0]
             model_path = get_model_path(stock_symbol, int(model_version))
-            pm = PredictionModel(
-                for_stock=stock_symbol,
-                acc_50=accuracies[0] * 100,
-                acc_60=accuracies[1] * 100,
-                acc_70=accuracies[2] * 100,
-                acc_80=accuracies[3] * 100,
-                acc_90=accuracies[4] * 100,
-                acc_95=accuracies[5] * 100,
-                acc_99=accuracies[6] * 100,
-            )
+            pm = PredictionModel.objects.get(for_stock__exact=stock_symbol)
+            pm.acc_50 = accuracies[0] * 100
+            pm.acc_60 = accuracies[1] * 100
+            pm.acc_70 = accuracies[2] * 100
+            pm.acc_80 = accuracies[3] * 100
+            pm.acc_90 = accuracies[4] * 100
+            pm.acc_95 = accuracies[5] * 100
+            pm.acc_99 = accuracies[6] * 100
             pm.VERSIONS.append(tuple([str(model_version)]*2))
             pm.PATH_CHOICES.append((str(model_version), model_path))
+            pm.num_nodes = num_nodes
             pm.version = model_version
             pm.path = model_path
             pm.save()
