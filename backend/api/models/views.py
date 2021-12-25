@@ -10,8 +10,6 @@ import os
 import sys
 import plotly
 import plotly.express as px
-import tensorflow as tf
-from tensorflow import keras
 
 
 def get_dir(folder_name):
