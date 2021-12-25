@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
 from models.models import PredictionModel
@@ -158,14 +159,19 @@ def get_pred(request, stock_symbol):
     fetcher.fetch_a_stock(stock_symbol)
     cleaner.clean_a_stock(stock_symbol)
     x_train, y_train, x_test, y_test = cleaner.get_prep_data(stock_symbol)
-    if stock_symbol in models_in_use.keys():
-        model_path = get_model_in_use_path(stock_symbol).strip()
-        current_model = tf.keras.models.load_model(model_path, compile=False)
-        to_predict = x_test
-        predictions = current_model.predict(to_predict)
+    existing_model = None
+    try:
+        existing_model = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
+    except ObjectDoesNotExist:
+        HttpResponseRedirect(f"http://localhost:8000/train/{stock_symbol}/100/True")
 
-        version = int(get_model_in_use_path(stock_symbol).split("_")[-1][1:])
-        mv, nn, a, p = get_stock_model_data(stock_symbol, version)
+    if existing_model:
+        model_path = existing_model.path.strip()
+        current_model = tf.keras.models.load_model(model_path, compile=False)
+        predictions = current_model.predict(x_test)
+
+        version = existing_model.version
+        p = get_stock_model_data(stock_symbol, int(version))[3]
         p = [pred[0] for pred in cleaner.rescale_data(predictions)][-100:]
         actual_values = cleaner._get_df_from_table(stock_symbol, True)
         actual_values = actual_values["Close"][-len(p) :].tolist()
@@ -190,16 +196,16 @@ def get_pred(request, stock_symbol):
 
         context = {
             "prediction": round(p[-1], 2),
-            "stock": stock_symbol,
-            "model_version": mv,
-            "num_nodes": nn,
-            "acc_0": a[0],
-            "acc_1": a[1],
-            "acc_2": a[2],
-            "acc_3": a[3],
-            "acc_4": a[4],
-            "acc_5": a[5],
-            "acc_6": a[6],
+            "stock": existing_model.for_stock,
+            "model_version": version,
+            "num_nodes": existing_model.num_nodes,
+            "acc_0": existing_model.acc_50,
+            "acc_1": existing_model.acc_60,
+            "acc_2": existing_model.acc_70,
+            "acc_3": existing_model.acc_80,
+            "acc_4": existing_model.acc_90,
+            "acc_5": existing_model.acc_95,
+            "acc_6": existing_model.acc_99,
             "graph_div": graph_div,
         }
 
@@ -233,7 +239,7 @@ def get_pred(request, stock_symbol):
 
         return render(request, "predictions.html", context)
     else:
-        return HttpResponseRedirect('http://localhost:8000')
+        return HttpResponseRedirect(f"http://localhost:8000/train/{stock_symbol}/100/True")
 
 
 def should_update_model_in_use_if_it_is_much_better_or_not_as_good(
@@ -316,7 +322,7 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
             accuracies = model_stats['accuracy']
             model_version = get_stock_model_data(stock_symbol)[0]
             model_path = get_model_path(stock_symbol, int(model_version))
-            pm = PredictionModel.objects.get(for_stock__exact=stock_symbol)
+            pm = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
             pm.acc_50 = accuracies[0] * 100
             pm.acc_60 = accuracies[1] * 100
             pm.acc_70 = accuracies[2] * 100
@@ -332,13 +338,13 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
             pm.save()
             update_model(request, stock_symbol, model_version)
 
-    return JsonResponse(responseMSG, safe=False, status=200)
+    return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock_symbol}")
 
 
 def update_model(request, stock_symbol, version):
     file_path = get_model_path(stock_symbol, int(version))
     update_model_in_use(stock_symbol, file_path)
-    return JsonResponse({}, status=200)
+    return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock_symbol}")
 
 
 def admin_models(request, stock_symbol):
