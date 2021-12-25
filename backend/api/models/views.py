@@ -312,7 +312,25 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
             pm.path = model_path
             pm.save()
         else:
-            update_model(request, stock_symbol, get_stock_model_data(stock_symbol)[0])
+            accuracies = model_stats['accuracy']
+            model_version = get_stock_model_data(stock_symbol)[0]
+            model_path = get_model_path(stock_symbol, int(model_version))
+            pm = PredictionModel(
+                for_stock=stock_symbol,
+                acc_50=accuracies[0] * 100,
+                acc_60=accuracies[1] * 100,
+                acc_70=accuracies[2] * 100,
+                acc_80=accuracies[3] * 100,
+                acc_90=accuracies[4] * 100,
+                acc_95=accuracies[5] * 100,
+                acc_99=accuracies[6] * 100,
+            )
+            pm.VERSIONS.append(tuple([str(model_version)]*2))
+            pm.PATH_CHOICES.append((str(model_version), model_path))
+            pm.version = model_version
+            pm.path = model_path
+            pm.save()
+            update_model(request, stock_symbol, model_version)
 
     return JsonResponse(responseMSG, safe=False, status=200)
 
