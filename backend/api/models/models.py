@@ -15,3 +15,6 @@ class PredictionModel(models.Model):
     acc_90 = models.DecimalField(max_digits=4, decimal_places=2)
     acc_95 = models.DecimalField(max_digits=4, decimal_places=2)
     acc_99 = models.DecimalField(max_digits=4, decimal_places=2)
+
+    def __str__(self):
+        return "%s Prediction Model" % self.for_stock
