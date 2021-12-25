@@ -1,7 +1,7 @@
 from django import forms
-from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
-from scipy.ndimage.interpolation import shift
+from models.models import PredictionModel
 import sqlite3
 import numpy as np
 import pandas as pd
@@ -61,7 +61,7 @@ def get_all_stock_model_versions_data(stock_symbol) -> list:
     )[0]
     for version in os.listdir(os.path.join(MODELS_DIR, folder)):
         model_data.append(get_stock_model_data(stock_symbol, version=int(version[2:])))
-    return JsonResponse(model_data, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(model_data, safe=False, status=200)
 
 
 def get_stock_model_data(stock_symbol, version: int = 0) -> tuple:
@@ -161,7 +161,7 @@ def get_pred(request, stock_symbol):
     if stock_symbol in models_in_use.keys():
         model_path = get_model_in_use_path(stock_symbol).strip()
         current_model = tf.keras.models.load_model(model_path, compile=False)
-        to_predict = x_test  # shift(y_test, -1, cval=0)
+        to_predict = x_test
         predictions = current_model.predict(to_predict)
 
         version = int(get_model_in_use_path(stock_symbol).split("_")[-1][1:])
@@ -291,24 +291,40 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
     responseMSG = True  # json.dumps(should_update_model_in_use_if_it_is_much_better_or_not_as_good(stock_symbol, model_stats['accuracy']))
     # update current model to be newly trained one
     if save == True:
-        if get_model_in_use_path == "":
+        if get_model_in_use_path(stock_symbol) == "":
             add_to_models_in_use(stock_symbol)
+            accuracies = model_stats['accuracy']
+            model_version = '1'
+            model_path = get_model_path(stock_symbol, int(model_version))
+            pm = PredictionModel(
+                for_stock=stock_symbol,
+                acc_50=accuracies[0] * 100,
+                acc_60=accuracies[1] * 100,
+                acc_70=accuracies[2] * 100,
+                acc_80=accuracies[3] * 100,
+                acc_90=accuracies[4] * 100,
+                acc_95=accuracies[5] * 100,
+                acc_99=accuracies[6] * 100,
+            )
+            pm.VERSIONS.append(tuple([model_version]*2))
+            pm.PATH_CHOICES.append((model_version, model_path))
+            pm.version = model_version
+            pm.path = model_path
+            pm.save()
         else:
             update_model(request, stock_symbol, get_stock_model_data(stock_symbol)[0])
 
-    return JsonResponse(responseMSG, safe=False, status=status.HTTP_200_OK)
+    return JsonResponse(responseMSG, safe=False, status=200)
 
 
 def update_model(request, stock_symbol, version):
     file_path = get_model_path(stock_symbol, int(version))
     update_model_in_use(stock_symbol, file_path)
-    return HttpResponse(status.HTTP_200_OK)
+    return JsonResponse({}, status=200)
 
 
 def admin_models(request, stock_symbol):
     # if request.method == "GET":
 
     print("it works wooho admin_models  ", stock_symbol)
-    return HttpResponse(
-        status=200,
-    )
+    return JsonResponse({}, status=200)
