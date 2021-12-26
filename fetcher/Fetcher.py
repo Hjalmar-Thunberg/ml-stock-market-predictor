@@ -79,15 +79,3 @@ class DataFetcher:
             print(f'Fetched data for {stock_name}')
             self.logger.log(f'Fetched data for {stock_name}', self.logger.urgency.LOW)
         else: self.logger.log(f'could not fetch data for {stock_name}', self.logger.urgency.HIGH)
-
-
-    def add_new_stock(self, stock_name):
-            os.chdir(self.DATA_PATH)
-            with open(self.stock_file, 'a+') as f:
-                # Reads csv file into a list
-                reader = csv.reader(f)
-                stocks = list(reader)
-
-                if not stock_name in stocks:
-                    f.write(stock_name + '\n')
-            os.chdir(self.cwd)

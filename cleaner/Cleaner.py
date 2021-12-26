@@ -12,6 +12,7 @@ class DataCleaner:
     """
     def __init__(self):
         
+        # --- Directory preperations ---
         self.ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.DATA_PATH = os.path.join(self.ROOT_DIR, 'data')
         self.cwd = os.getcwd()
@@ -30,18 +31,7 @@ class DataCleaner:
         self.scaler = MinMaxScaler(feature_range=(0,1))
 
         # --- Verification Schemas ---
-        self.STOCK_DATA_VERIFICATION_SCHEMA = ('Date', 'High', 'Low', 'Open', 'Close', 'Volume', 'AdjClose')
-        self.drop_out = ['High', 'Low', 'Open', 'Volume', 'AdjClose']
-
-    def verify_data(self, dataframe, schema) -> bool:
-        """
-        Verifies if the given dataset matches the schema.
-        Returns if dataset is valid or not.
-        """
-        is_valid = tuple(dataframe.columns) == schema
-        if not is_valid:
-            self.logger.log(f"{schema} verification failed for {tuple(dataframe.columns)}", self.logger.urgency.HIGH)
-        return is_valid
+        self.drop_out = ['Date', 'High', 'Low', 'Open', 'Volume', 'AdjClose']
 
     def _get_df_from_table(self, table_name, from_clean=False):
         """
@@ -70,6 +60,10 @@ class DataCleaner:
             cleaned_stocks.append(table[0])
         return cleaned_stocks    
 
+    def _valid_data(self, df):
+        """ Validate dataframe to have only column close and of type float """
+        return (df.columns == "Close") and (df['Close'].dtype == float)
+
     def clean_all_stocks(self):
         """ 
         Cleans data for all stocks stored in dirtyData db.
@@ -88,9 +82,9 @@ class DataCleaner:
         Stores cleaned data in the cleanData db.
         """
         df = self._get_df_from_table(stock_name)
-        if df is not None:
+        df = df.drop(self.drop_out, axis=1)
+        if self._valid_data(df):
             print(f'Cleaning data for {stock_name}')
-            df = df.drop(self.drop_out, axis=1)
             df['Close'].fillna(value=df['Close'].mean(), inplace=True) 
             df.to_sql(stock_name, self._conn_clean_db, if_exists='replace')
             self.logger.log(f'Cleaned data from table {stock_name}', self.logger.urgency.LOW)
@@ -98,6 +92,7 @@ class DataCleaner:
             self.logger.log(f'Failed to clean {stock_name}', self.logger.urgency.MODERATE)
 
     def rescale_data(self, dataset):
+        """ Rescales normalized data """
         return self.scaler.inverse_transform(dataset)
 
     def get_prep_data(self, stock_name):
@@ -113,8 +108,7 @@ class DataCleaner:
         # Get the number of rows to train the model on, using 80% of the data
         training_data_len = math.ceil(len(dataset) * .9)
 
-        # Scale data between 0 and 1 to avoid the bias using normalization
-        
+        # Scale data between 0 and 1 to avoid the bias using normalization 
         scaled_data = self.scaler.fit_transform(dataset)
 
         # Create training dataset
