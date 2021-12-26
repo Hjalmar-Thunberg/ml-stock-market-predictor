@@ -4,19 +4,15 @@
 - Pipenv
 - Django
 - Django-admin
-- Django rest framework
-- Django cors headers
-
 
 **How to setup:**
 1. cd to ./api in your terminal
 2. `pip3 install pipenv`
 3. `pipenv shell`
-4. `pip install django`
-5. `pip install django-admin`
-6. `pip install djangorestframework`
-7. `pip install django-cors-headers`
-8. `pip install pandas` 
+4. `pipenv install`
+5. `py|python manage.py makemigrations`
+6. `py|python manage.py migrate`
+> 'py' for Windows, 'python' for Mac/Linux
 
 **How to run:**
 `python manage.py runserver [PORT NUMBER]`
