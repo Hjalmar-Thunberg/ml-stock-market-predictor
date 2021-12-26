@@ -24,7 +24,7 @@ class PredictionModelAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        if 'num_nodes' in form.changed_data:
+        if 'version' not in form.changed_data and 'num_nodes' in form.changed_data:
             stock = obj.for_stock
             num_nodes = int(form.cleaned_data['num_nodes'])
             _admin_model_train(stock, num_nodes)
