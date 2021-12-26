@@ -10,6 +10,7 @@ import os
 import sys
 import plotly
 import plotly.express as px
+import tensorflow as tf
 
 
 def get_dir(folder_name):
@@ -228,6 +229,25 @@ def model_exists(stock_symbol) -> bool:
     except ObjectDoesNotExist:
         return False
 
+# For admin use only
+def _admin_model_train(stock_symbol, num_nodes):
+    model_stats = trainer.train_a_stock(stock_symbol, num_nodes, True)
+    # update current model to be newly trained one
+    accuracies = model_stats['accuracy']
+    model_version = get_stock_model_data(stock_symbol)[0]
+    model_path = get_model_path(stock_symbol, int(model_version))
+    pm = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
+    pm.acc_50 = accuracies[0] * 100
+    pm.acc_60 = accuracies[1] * 100
+    pm.acc_70 = accuracies[2] * 100
+    pm.acc_80 = accuracies[3] * 100
+    pm.acc_90 = accuracies[4] * 100
+    pm.acc_95 = accuracies[5] * 100
+    pm.acc_99 = accuracies[6] * 100
+    pm.num_nodes = num_nodes
+    pm.version = model_version
+    pm.path = model_path
+    pm.save()
 
 def admin_train(request, stock_symbol, num_nodes, should_save=False):
     save = True if should_save == "True" else False
@@ -238,7 +258,6 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
         if not model_exists(stock_symbol):
             accuracies = model_stats['accuracy']
             model_version = 1
-            model_path = get_model_path(stock_symbol, model_version)
             pm = PredictionModel(
                 for_stock=stock_symbol,
                 acc_50=accuracies[0] * 100,
@@ -251,12 +270,10 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
             )
             pm.num_nodes = num_nodes
             pm.version = model_version
-            pm.path = model_path
             pm.save()
         else:
             accuracies = model_stats['accuracy']
             model_version = get_stock_model_data(stock_symbol)[0]
-            model_path = get_model_path(stock_symbol, int(model_version))
             pm = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
             pm.acc_50 = accuracies[0] * 100
             pm.acc_60 = accuracies[1] * 100
@@ -267,7 +284,6 @@ def admin_train(request, stock_symbol, num_nodes, should_save=False):
             pm.acc_99 = accuracies[6] * 100
             pm.num_nodes = num_nodes
             pm.version = model_version
-            pm.path = model_path
             pm.save()
 
         return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock_symbol}")
