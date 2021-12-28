@@ -28,7 +28,12 @@
 
     button:hover {
         background: #e74c3c; 
-    }  
+    }
+
+    .graph {
+      margin:0 auto;
+      box-shadow: inset 0 0 0 100px rgba(36, 70, 105, 0.74);
+    }
     
   </style>
   <button onclick="window.location.href='http://localhost:8000';"> Home </button>
@@ -51,8 +56,10 @@
   </div>
 
   <div>
-    <div style="width:1500;height:1000;margin: 0 auto">
+    <div class="graph">
         {{ graph_div | safe }}
+    </div>
+    <div class="graph">
     </div>
   </div>
 </div>

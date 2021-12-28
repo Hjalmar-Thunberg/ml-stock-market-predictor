@@ -1,8 +1,10 @@
 <div>
     <style>
+
         body {
-          background-color: #36393e;
+            background-color: #36393e;
         }
+          
         h1, h2, h4, p {
           color: #ffffff;
           text-align: center;
@@ -334,6 +336,81 @@
         #hastylink:hover {
             opacity: 1
         }
+
+
+          
+          .loadingUl {
+            margin: auto;
+            height: 10px;
+            width: 500px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            list-style: none;
+            padding: 0;
+            margin-top: 200;
+            {% comment %} padding-right: 60; {% endcomment %}
+          }
+          
+          .loadingLi {
+            display: block;
+            float: left;
+            width: 90px;
+            height: 10px;
+            margin-right: 10px;
+          }
+          
+          .loadingLi:nth-child(-n+3) {
+            background: rgba(255,255,255,0.9);
+            box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                              0px 0px 20px rgba(117,182,214,0.5);
+          }
+          
+          .loadingLi:nth-child(n+4) {
+            box-shadow: inset 0px 0px 10px 1px rgba(117,182,255,0.4),
+                              0px 0px 20px rgba(117,182,255,0.1);
+          }
+          
+          .loadingLi:nth-child(3) {
+            -webkit-animation: pulse 1s alternate infinite;
+            -moz-animation: pulse 1s alternate infinite;
+          }
+          
+          @-webkit-keyframes pulse {
+            0% {
+              background: rgba(255,255,255,1);
+              box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                                0px 0px 40px 2px rgba(105,135,255,1);
+            }
+            100% {
+              background: rgba(255,255,255,0);
+              box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                                0px 0px 30px 2px rgba(105,135,255,0.3);
+            }
+          }
+            
+          @-moz-keyframes pulse {
+            0% {
+              background: rgba(255,255,255,1);
+              box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                                0px 0px 40px 2px rgba(105,135,255,1);
+            }
+            100% {
+              background: rgba(255,255,255,0);
+              box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                                0px 0px 30px 2px rgba(105,135,255,0.3);
+            }
+          }
+
+        .hidden{
+            display:none;
+        }
+        
+        .unhidden{
+            display:block;
+        }
         
       </style>
 
@@ -347,10 +424,7 @@
 <ul class="menu cf">
     <li>
       <a href="">Select a stock</a>
-      <ul class="submenu">
-        <li><a href="http://localhost:8000/get-pred/TSLA/">TSLA</a></li>
-        <li><a href="http://localhost:8000/get-pred/AAPL/">AAPL</a></li>
-      </ul>     
+      <div id="slideContainer"></div>  
     </li>
   </ul>
   
@@ -360,18 +434,82 @@
     </div>
     <div>
      <button id="clickMe" type="button" value="clickme" onclick="nextPage();"> See prediction </a> </button>
-     
+
+     <div id="loading" class="hidden">
+     <ul class="loadingUl">
+        <li class="loadingLi"></li>
+        <li class="loadingLi"></li>
+        <li class="loadingLi"></li>
+        <li class="loadingLi"></li>
+      </ul>  
     </div>
    </div>
-
-
 </div>
 
 <script>
+    
+
+    var storedStocks = [];
+    if (localStorage.getItem("stocks") === null) {
+        var stocks = [];
+        localStorage['stocks']=JSON.stringify(stocks);
+    } else {
+        storedStocks = JSON.parse(localStorage['stocks']); 
+    }
+  
+    var str =  "<ul class=\"submenu\">";
+    storedStocks.forEach(function(storedStocks) {
+        str += '<li> <a href=\'' + 'http://localhost:8000/get-pred/' + storedStocks + '/\'' + '>'+ storedStocks + '</a></li>';
+    }); 
+
+    str += '</ul>';
+    document.getElementById("slideContainer").innerHTML = str;
+
+  
     function nextPage() {
-        // Selecting the input element and get its value 
         let inputVal = document.getElementById("stockName").value;
-        let link = 'http://localhost:8000/get-pred/' + inputVal + '/';
-        window.location.href = link
+        if (inputVal !== '') {
+            
+            let link = 'http://localhost:8000/train/' + inputVal + '/100/True';
+            window.location.href = link;
+
+            var updateStocks = JSON.parse(localStorage['stocks']); 
+            updateStocks.push(inputVal);
+            localStorage['stocks']=JSON.stringify(updateStocks);
+                    
+            unhide('loading');
+        }
+    }
+
+    {% comment %} function setCookie(c_name,value,exdays){
+        var exdate=new Date();
+        exdate.setDate(exdate.getDate() + exdays);
+        var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
+        document.cookie=c_name + "=" + c_value;
+    }
+
+    function getCookie(c_name){
+        var i,x,y,ARRcookies=document.cookie.split(";");
+        for (i=0;i<ARRcookies.length;i++){
+            x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+            y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+            x=x.replace(/^\s+|\s+$/g,"");
+            if (x==c_name){
+                    return unescape(y);
+            }
+        }
+    } {% endcomment %}
+    
+    function unhide(divID) {
+        var item = document.getElementById(divID);
+        if (item) {
+            if(item.className=='hidden'){
+                item.className = 'unhidden' ;
+               
+            }else{
+                item.className = 'hidden';
+                
+            }
+        }
     }
 </script>
