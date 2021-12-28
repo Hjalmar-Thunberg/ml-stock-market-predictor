@@ -126,6 +126,8 @@ def get_model_path(stock_symbol: str, version=0) -> str:
         return model_path
     return ""
 
+def load():
+    return render("loading.html")
 
 def get_pred(request, stock_symbol):
     fetcher.fetch_a_stock(stock_symbol)
@@ -211,6 +213,7 @@ def get_pred(request, stock_symbol):
 
         return render(request, "predictions.html", context)
     else:
+        load()
         return HttpResponseRedirect(f"http://localhost:8000/train/{stock_symbol}/100/True")
 
 

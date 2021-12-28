@@ -1,5 +1,38 @@
 <div>
-  <h1>Our prediction for today's closing price: ${{ prediction }}</h1>
+  <style>
+    body {
+      background-color: #36393e;
+    }
+    h1, h2, h4, p {
+      color: #ffffff;
+      text-align: center;
+      font-family: Arial
+    }
+    b {
+      color: #32cd32
+    }
+
+    button {
+      background-color: #34495e; /* Dark Blue */
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      position: relative;
+      border-radius: 5%;
+      margin-top: 16
+    }
+
+    button:hover {
+        background: #e74c3c; 
+    }  
+    
+  </style>
+  <button onclick="window.location.href='http://localhost:8000';"> Home </button>
+  <h1>The prediction for today's closing price: <b>${{ prediction }}</b></h1>
 
   <div>
     <h2>{{ stock }} Prediction Model</h2>
@@ -7,19 +40,19 @@
     <p>Number of nodes used: {{ num_nodes }}</li>
     <div>
       <h4>Our prediction percentile</h4>
-      <p>Within 50% of actual: <b>{{ acc_0 }}</b>%</li>
-      <p>Within 60% of actual: <b>{{ acc_1 }}</b>%</li>
-      <p>Within 70% of actual: <b>{{ acc_2 }}</b>%</li>
-      <p>Within 80% of actual: <b>{{ acc_3 }}</b>%</li>
-      <p>Within 90% of actual: <b>{{ acc_4 }}</b>%</li>
-      <p>Within 95% of actual: <b>{{ acc_5 }}</b>%</li>
-      <p>Within 99% of actual: <b>{{ acc_6 }}</b>%</li>
+      <p>Within 50% of actual: <b>{{ acc_0 }}%</b></li>
+      <p>Within 60% of actual: <b>{{ acc_1 }}%</b></li>
+      <p>Within 70% of actual: <b>{{ acc_2 }}%</b></li>
+      <p>Within 80% of actual: <b>{{ acc_3 }}%</b></li>
+      <p>Within 90% of actual: <b>{{ acc_4 }}%</b></li>
+      <p>Within 95% of actual: <b>{{ acc_5 }}%</b></li>
+      <p>Within 99% of actual: <b>{{ acc_6 }}%</b></li>
     </div>
   </div>
 
   <div>
-    <div style="width:1000;height:1000">
-        {{ graph_div|safe }}
+    <div style="width:1500;height:1000;margin: 0 auto">
+        {{ graph_div | safe }}
     </div>
   </div>
 </div>
