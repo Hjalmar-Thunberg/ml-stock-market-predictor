@@ -168,3 +168,29 @@ Planning week
 - 
 
 <br />
+
+### Group 3 --- Week 7 (20-27 Dec)
+<hr />
+
+> Delegated to: Christian
+- Cleanup backend, remove unnecessary methods and improve existing functions that handle requests.
+- Create the admin models for prediction models.
+- Implement CRUD functionality for the prediction models.
+- Test cleaned up backend with improved data validator to ensure all functionality works as intended.
+
+<br />
+
+> Delegated to: Hjalmar
+- 
+
+<br />
+
+> Delegated to: Hugo
+- 
+
+<br />
+
+> Delegated to: Kardo
+- 
+
+<br />
