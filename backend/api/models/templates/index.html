@@ -457,6 +457,7 @@
         storedStocks = JSON.parse(localStorage['stocks']); 
     }
   
+    localStorage.clear()
     var str =  "<ul class=\"submenu\">";
     storedStocks.forEach(function(storedStocks) {
         str += '<li> <a href=\'' + 'http://localhost:8000/get-pred/' + storedStocks + '/\'' + '>'+ storedStocks + '</a></li>';

@@ -15,9 +15,10 @@ import tensorflow as tf
 
 def get_dir(folder_name):
     cwd = os.getcwd()
+    print("my current dir: ",cwd)
     basepath = ""
     while True:
-        if os.path.exists(folder_name):
+        if os.path.exists(os.path.join("utils",folder_name)):
             break
         os.chdir("..")
         basepath = os.path.join(basepath, "..")
@@ -31,10 +32,10 @@ get_dir("cleaner")
 get_dir("fetcher")
 get_dir("trainer")
 
-from logger.Logger import Logger
-from cleaner.Cleaner import DataCleaner
-from fetcher.Fetcher import DataFetcher
-from trainer.Trainer import Trainer
+from utils.logger.Logger import Logger
+from utils.cleaner.Cleaner import DataCleaner
+from utils.fetcher.Fetcher import DataFetcher
+from utils.trainer.Trainer import Trainer
 
 logger = Logger("logs_backend.db")
 cleaner = DataCleaner()
@@ -42,11 +43,11 @@ fetcher = DataFetcher()
 trainer = Trainer()
 
 CWD = os.getcwd()
-ROOT_DIR = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
-MODELS_DIR = os.path.join(ROOT_DIR, "models")
-PREDICTIONS_DIR = os.path.join(ROOT_DIR, "data")
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+MODELS_DIR = os.path.join(ROOT_DIR, "utils/models")
+PREDICTIONS_DIR = os.path.join(ROOT_DIR, "utils/data")
 
 class StocksDropdownForm(forms.Form):
     def __init__(self, *args, **kwargs):
