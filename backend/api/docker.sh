@@ -1,2 +1,2 @@
 docker build --tag backend .
-docker run --name backend -itd --publish 8000:8000 backend
+docker run --name backend -it -p 8000:8000 backend
