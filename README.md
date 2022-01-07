@@ -72,7 +72,9 @@ Planning week
 <br />
 
 > Delegated to: Kardo
-- 
+- Dockerize Jupyter-notebook
+- Docker React-frontend
+- Docker django backend with sqlite 3 dependency
 
 <br />
 
@@ -102,7 +104,7 @@ Planning week
 <br />
 
 > Delegated to: Kardo
-- 
+- Implement DVC model versioning
 
 <br />
 
@@ -135,7 +137,7 @@ Planning week
 <br />
 
 > Delegated to: Kardo
-- 
+- N/A
 
 <br />
 
@@ -165,7 +167,8 @@ Planning week
 <br />
 
 > Delegated to: Kardo
-- 
+- Refactor the system, change file structure to be localized in one directory. Update paths to modules in the system.
+- Update and design UI Components to django frontend.
 
 <br />
 
@@ -181,7 +184,7 @@ Planning week
 <br />
 
 > Delegated to: Hjalmar
-- 
+- Created unit test for main function in fetcher and cleaner component.
 
 <br />
 
@@ -191,6 +194,7 @@ Planning week
 <br />
 
 > Delegated to: Kardo
-- 
+- Deploy Container to dockerhub and deploy container to k8 cluster using kubernetes with pull policy
+- Refactor frontend for final submission.
 
 <br />
