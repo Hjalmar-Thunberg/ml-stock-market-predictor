@@ -15,7 +15,6 @@ import tensorflow as tf
 
 def get_dir(folder_name):
     cwd = os.getcwd()
-    print("my current dir: ",cwd)
     basepath = ""
     while True:
         if os.path.exists(os.path.join("utils",folder_name)):
@@ -99,14 +98,8 @@ def get_stock_model_data(stock_symbol, version: int = 0) -> tuple:
         return tuple([mv, nn, a, p])
 
 def index(request):
-    form = StocksDropdownForm()
-    if request.method == "POST":
-        form = StocksDropdownForm(request.POST)
-        if form.is_valid():
-            stock = form.cleaned_data["stocks"]
-            return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock}")
-    errors = form.errors or None
-    return render(request, "index.html", {"form": form, "errors": errors})
+    models = [model for model in PredictionModel.objects.all()]
+    return render(request, "index.html", {"models": models})
 
 
 def get_model_path(stock_symbol: str, version=0) -> str:

@@ -30,7 +30,25 @@
           margin-top: 16
         }
 
+        .adminButton {
+            background-color: #34495e; /* Dark Blue */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            position: relative;
+            border-radius: 5%;
+            margin-top: 16
+          }
+
         button:hover {
+            background: #e74c3c; 
+        }  
+
+        .adminButton:hover {
             background: #e74c3c; 
         }  
 
@@ -421,6 +439,8 @@
     <input type="submit" value="View Predictions"/>
 </form> {% endcomment %}
 
+<button class="adminButton" onclick="window.location.href='http://localhost:8000/admin';"> Admin </button>
+
 <ul class="menu cf">
     <li>
       <a href="">Select a stock</a>
@@ -434,9 +454,9 @@
     </div>
     <div>
      <button id="clickMe" type="button" value="clickme" onclick="nextPage();"> See prediction </a> </button>
-
-     <div id="loading" class="hidden">
+     <div id="loadingIcon" class="hidden">
      <ul class="loadingUl">
+        
         <li class="loadingLi"></li>
         <li class="loadingLi"></li>
         <li class="loadingLi"></li>
@@ -447,69 +467,31 @@
 </div>
 
 <script>
-    
-
-    var storedStocks = [];
-    if (localStorage.getItem("stocks") === null) {
-        var stocks = [];
-        localStorage['stocks']=JSON.stringify(stocks);
-    } else {
-        storedStocks = JSON.parse(localStorage['stocks']); 
-    }
-  
-    localStorage.clear()
+   
     var str =  "<ul class=\"submenu\">";
-    storedStocks.forEach(function(storedStocks) {
-        str += '<li> <a href=\'' + 'http://localhost:8000/get-pred/' + storedStocks + '/\'' + '>'+ storedStocks + '</a></li>';
-    }); 
-
+    str += '{% for model in models %}'    
+    str += '<li> <a href=\'' + 'http://localhost:8000/get-pred/' + '{{model.for_stock}}' + '/\'' + '>'+  '{{model.for_stock}}' + '</a></li>';
+    str += '{% endfor %}'
     str += '</ul>';
-    document.getElementById("slideContainer").innerHTML = str;
 
+    document.getElementById("slideContainer").innerHTML = str; 
   
     function nextPage() {
         let inputVal = document.getElementById("stockName").value;
         if (inputVal !== '') {
-            
             let link = 'http://localhost:8000/train/' + inputVal + '/100/True';
-            window.location.href = link;
-
-            var updateStocks = JSON.parse(localStorage['stocks']); 
-            updateStocks.push(inputVal);
-            localStorage['stocks']=JSON.stringify(updateStocks);
-                    
-            unhide('loading');
+            window.location.href = link;         
+            unhide('loadingIcon');
         }
     }
-
-    {% comment %} function setCookie(c_name,value,exdays){
-        var exdate=new Date();
-        exdate.setDate(exdate.getDate() + exdays);
-        var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
-        document.cookie=c_name + "=" + c_value;
-    }
-
-    function getCookie(c_name){
-        var i,x,y,ARRcookies=document.cookie.split(";");
-        for (i=0;i<ARRcookies.length;i++){
-            x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
-            y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
-            x=x.replace(/^\s+|\s+$/g,"");
-            if (x==c_name){
-                    return unescape(y);
-            }
-        }
-    } {% endcomment %}
     
     function unhide(divID) {
         var item = document.getElementById(divID);
         if (item) {
             if(item.className=='hidden'){
                 item.className = 'unhidden' ;
-               
             }else{
                 item.className = 'hidden';
-                
             }
         }
     }
