@@ -1,15 +1,516 @@
+<div>
+    <style>
 
-<label for="stocks">Select a stock</label>
+        body {
+            background-color: #36393e;
+        }
+          
+        h1, h2, h4, p {
+          color: #ffffff;
+          text-align: center;
+          font-family: Arial
+        }
+        b {
+          color: #32cd32
+        }
+    
+        button {
+          background-color: #34495e; /* Dark Blue */
+          border: none;
+          color: white;
+          padding: 15px 32px;
+          text-align: center;
+          text-decoration: none;
+          display: inline-block;
+          font-size: 16px;
+          position: relative;
+          border-radius: 5%;
+          margin:0 auto;
+          display: block;
+          margin-top: 16
+        }
+
+        button:hover {
+            background: #e74c3c; 
+        }  
+
+        /* Clearing floats */
+        .cf:before,
+        .cf:after {
+            content: " ";
+            display: table;
+        }
+
+        .cf:after {
+            clear: both;
+        }
+
+        .cf {
+        *zoom: 1;
+        }
+
+        /* Mini reset, no margins, paddings or bullets */
+        .menu,
+        .submenu {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        /* Main level */
+        .menu {     
+            margin: 50px auto;
+            width: 800px;
+            /* http://www.red-team-design.com/horizontal-centering-using-css-fit-content-value */
+            width: -moz-fit-content;
+            width: -webkit-fit-content;
+            width: fit-content; 
+        }
+
+        .menu > li {
+            background: #34495e;
+            float: left;
+            position: relative;
+            transform: skewX(25deg);
+        }
+
+        .menu a {
+            display: block;
+            color: #fff;
+            text-transform: uppercase;
+            text-decoration: none;
+            font-family: Arial, Helvetica;
+            font-size: 14px;
+        }   
+
+        .menu li:hover {
+            background: #e74c3c;
+        }   
+
+        .menu > li > a {
+            transform: skewX(-25deg);
+            padding: 1em 2em;
+        }
+
+        /* Dropdown */
+        .submenu {
+            position: absolute;
+            width: 200px;
+            left: 50%; margin-left: -100px;
+            transform: skewX(-25deg);
+            transform-origin: left top;
+        }
+
+        .submenu li {
+            background-color: #34495e;
+            position: relative;
+            overflow: hidden;   
+        }           
+
+        .submenu > li > a {
+            padding: 1em 2em;     
+        }
+
+        .submenu > li::after {
+            content: '';
+            position: absolute;
+            top: -125%;
+            height: 100%;
+            width: 100%;      
+            box-shadow: 0 0 50px rgba(0, 0, 0, .9);     
+        }   
+
+        /* Odd stuff */
+        .submenu > li:nth-child(odd){
+            transform: skewX(-25deg) translateX(0);
+        }
+
+        .submenu > li:nth-child(odd) > a {
+            transform: skewX(25deg);
+        }
+
+        .submenu > li:nth-child(odd)::after {
+            right: -50%;
+            transform: skewX(-25deg) rotate(3deg);
+        }       
+
+        /* Even stuff */
+        .submenu > li:nth-child(even){
+            transform: skewX(25deg) translateX(0);
+        }
+
+        .submenu > li:nth-child(even) > a {
+            transform: skewX(-25deg);
+        }
+
+        .submenu > li:nth-child(even)::after {
+            left: -50%;
+            transform: skewX(25deg) rotate(3deg);
+        }
+
+        /* Show dropdown */
+        .submenu,
+        .submenu li {
+            opacity: 0;
+            visibility: hidden;     
+        }
+
+        .submenu li {
+            transition: .2s ease transform;
+        }
+
+        .menu > li:hover .submenu,
+        .menu > li:hover .submenu li {
+            opacity: 1;
+            visibility: visible;
+        }   
+
+        .menu > li:hover .submenu li:nth-child(even){
+            transform: skewX(25deg) translateX(15px);     
+        }
+
+        .menu > li:hover .submenu li:nth-child(odd){
+            transform: skewX(-25deg) translateX(-15px);     
+        }
+
+        @import url('https://fonts.googleapis.com/css?family=Roboto');
+        @import url('https://fonts.googleapis.com/css?family=Andada|Permanent+Marker|Raleway:300');
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            position: relative;
+            font-family: 'Roboto', sans-serif;
+            color: #ffffff;
+        }
+
+        #namer {
+            position: relative;
+            max-width: 400px;
+            margin: 150px auto 0;
+        }
+
+        #namer input {
+            border: 0;
+            border-bottom: 2px solid #ffffff;
+            width: 100%;
+            font-size: 30px;
+            line-height: 35px;
+            height: 70px;
+            text-align: center;
+            padding: 10px;
+            background: transparent;
+            color: #ffffff;
+        }
+
+        #namer input.shake {
+            animation-name: shaker;
+            animation-duration: 200ms;
+            animation-timing-function: ease-in-out;
+            animation-delay: 0s;
+        }
+
+        #namer input:focus {
+            outline: 0;
+            color: #ffffff;
+        }
+
+        #namer input::placeholder {
+            color: #ffffff;
+        }
+
+        .namer-controls {
+            position: relative;
+            height: 30px;
+            margin: 20px 0;
+            text-align: center;
+            opacity: 0.3;
+        }
+
+        .namer-controls.active {
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        .namer-controls div {
+            float: left;
+            width: 33.33%;
+        }
+
+        .namer-controls div span {
+            box-shadow: 0px 0px 30px 0px rgba(0, 0, 0, 0.25);
+            padding: 10px 5px;
+            width: 95%;
+            display: inline-block;
+            margin-right: 5%;
+            border-radius: 30px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .namer-controls div span:last-child {
+            margin-right: 0;
+        }
+
+        .namer-controls div span.active {
+            box-shadow: none;
+            color: #ffffff;
+        }
+
+        #namer-input.serious input {
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: 'Andada', serif;
+            font-weight: 500;
+        }
+
+        #namer-input.modern input {
+            font-family: 'Raleway', sans-serif;
+            text-transform: lowercase;
+            font-weight: 300;
+            letter-spacing: 10px;
+        }
+
+        #namer-input.cheeky input {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 40px;
+        }
+
+        @keyframes shaker {
+            0% {
+                transform: translate(0px, 0px) rotate(0deg);
+                opacity: 0.8;
+            }
+            10% {
+                transform: translate(10px, 7px) rotate(-9deg);
+                opacity: 0.6;
+            }
+            20% {
+                transform: translate(13px, -19px) rotate(-3deg);
+                opacity: 0.3;
+            }
+            30% {
+                transform: translate(-6px, -6px) rotate(2deg);
+                opacity: 0.4;
+            }
+            40% {
+                transform: translate(-9px, -18px) rotate(-5deg);
+                opacity: 0.4;
+            }
+            50% {
+                transform: translate(10px, -8px) rotate(5deg);
+                opacity: 0.7;
+            }
+            60% {
+                transform: translate(-10px, 14px) rotate(-6deg);
+                opacity: 1;
+            }
+            70% {
+                transform: translate(10px, 3px) rotate(6deg);
+                opacity: 0.1;
+            }
+            80% {
+                transform: translate(-2px, 20px) rotate(-6deg);
+                opacity: 1;
+            }
+            90% {
+                transform: translate(-7px, -19px) rotate(2deg);
+                opacity: 0.5;
+            }
+        }
+
+        #hastylink {
+            position: fixed;
+            bottom:5px;
+            left: 0;
+            right: 0;
+            font-size: 14px;
+            color: #ffffff;
+            text-decoration: none;
+            text-align: center;
+            letter-spacing: 1px;
+            opacity: 0.5;
+        }
+        #hastylink:hover {
+            opacity: 1
+        }
+
+
+          
+          .loadingUl {
+            margin: auto;
+            height: 10px;
+            width: 500px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            list-style: none;
+            padding: 0;
+            margin-top: 200;
+            {% comment %} padding-right: 60; {% endcomment %}
+          }
+          
+          .loadingLi {
+            display: block;
+            float: left;
+            width: 90px;
+            height: 10px;
+            margin-right: 10px;
+          }
+          
+          .loadingLi:nth-child(-n+3) {
+            background: rgba(255,255,255,0.9);
+            box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                              0px 0px 20px rgba(117,182,214,0.5);
+          }
+          
+          .loadingLi:nth-child(n+4) {
+            box-shadow: inset 0px 0px 10px 1px rgba(117,182,255,0.4),
+                              0px 0px 20px rgba(117,182,255,0.1);
+          }
+          
+          .loadingLi:nth-child(3) {
+            -webkit-animation: pulse 1s alternate infinite;
+            -moz-animation: pulse 1s alternate infinite;
+          }
+          
+          @-webkit-keyframes pulse {
+            0% {
+              background: rgba(255,255,255,1);
+              box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                                0px 0px 40px 2px rgba(105,135,255,1);
+            }
+            100% {
+              background: rgba(255,255,255,0);
+              box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                                0px 0px 30px 2px rgba(105,135,255,0.3);
+            }
+          }
+            
+          @-moz-keyframes pulse {
+            0% {
+              background: rgba(255,255,255,1);
+              box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                                0px 0px 40px 2px rgba(105,135,255,1);
+            }
+            100% {
+              background: rgba(255,255,255,0);
+              box-shadow: inset 0px 0px 10px 2px rgba(117,182,255,0.5),
+                                0px 0px 30px 2px rgba(105,135,255,0.3);
+            }
+          }
+
+        .hidden{
+            display:none;
+        }
+        
+        .unhidden{
+            display:block;
+        }
+        
+      </style>
+
+{% comment %} 
 <form name="stocks" action="" method="post">
     {% csrf_token %}
     {{ form }}
     <input type="submit" value="View Predictions"/>
-</form>
-<!-- <select name="stocks" id="stocks-select" onselect="">
-    {% for stock in list_of_stock_models %}
-        <option value={ stock }>{{ stock }}</option>
-    {% endfor %}
-</select> -->
-<ul>
+</form> {% endcomment %}
 
-</ul>
+<ul class="menu cf">
+    <li>
+      <a href="">Select a stock</a>
+      <div id="slideContainer"></div>  
+    </li>
+  </ul>
+  
+  <div id="namer">
+    <div id="namer-input">
+     <input type="text" id="stockName" placeholder="Type in a stock of your choice">
+    </div>
+    <div>
+     <button id="clickMe" type="button" value="clickme" onclick="nextPage();"> See prediction </a> </button>
+
+     <div id="loading" class="hidden">
+     <ul class="loadingUl">
+        <li class="loadingLi"></li>
+        <li class="loadingLi"></li>
+        <li class="loadingLi"></li>
+        <li class="loadingLi"></li>
+      </ul>  
+    </div>
+   </div>
+</div>
+
+<script>
+    
+
+    var storedStocks = [];
+    if (localStorage.getItem("stocks") === null) {
+        var stocks = [];
+        localStorage['stocks']=JSON.stringify(stocks);
+    } else {
+        storedStocks = JSON.parse(localStorage['stocks']); 
+    }
+  
+    localStorage.clear()
+    var str =  "<ul class=\"submenu\">";
+    storedStocks.forEach(function(storedStocks) {
+        str += '<li> <a href=\'' + 'http://localhost:8000/get-pred/' + storedStocks + '/\'' + '>'+ storedStocks + '</a></li>';
+    }); 
+
+    str += '</ul>';
+    document.getElementById("slideContainer").innerHTML = str;
+
+  
+    function nextPage() {
+        let inputVal = document.getElementById("stockName").value;
+        if (inputVal !== '') {
+            
+            let link = 'http://localhost:8000/train/' + inputVal + '/100/True';
+            window.location.href = link;
+
+            var updateStocks = JSON.parse(localStorage['stocks']); 
+            updateStocks.push(inputVal);
+            localStorage['stocks']=JSON.stringify(updateStocks);
+                    
+            unhide('loading');
+        }
+    }
+
+    {% comment %} function setCookie(c_name,value,exdays){
+        var exdate=new Date();
+        exdate.setDate(exdate.getDate() + exdays);
+        var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
+        document.cookie=c_name + "=" + c_value;
+    }
+
+    function getCookie(c_name){
+        var i,x,y,ARRcookies=document.cookie.split(";");
+        for (i=0;i<ARRcookies.length;i++){
+            x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+            y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+            x=x.replace(/^\s+|\s+$/g,"");
+            if (x==c_name){
+                    return unescape(y);
+            }
+        }
+    } {% endcomment %}
+    
+    function unhide(divID) {
+        var item = document.getElementById(divID);
+        if (item) {
+            if(item.className=='hidden'){
+                item.className = 'unhidden' ;
+               
+            }else{
+                item.className = 'hidden';
+                
+            }
+        }
+    }
+</script>

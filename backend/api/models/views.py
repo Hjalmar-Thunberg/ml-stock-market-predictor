@@ -1,32 +1,24 @@
 from django import forms
-from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.renderers import JSONRenderer
-from rest_framework.parsers import JSONParser
-from rest_framework import status, permissions
-from .models import PredModel
-from .serializers import Serializer
-from scipy.ndimage.interpolation import shift
+from models.models import PredictionModel
 import sqlite3
-import random
 import numpy as np
 import pandas as pd
 import os
-import json
 import sys
-import datetime
 import plotly
 import plotly.express as px
 import tensorflow as tf
-from tensorflow import keras
 
 
 def get_dir(folder_name):
     cwd = os.getcwd()
+    print("my current dir: ",cwd)
     basepath = ""
     while True:
-        if os.path.exists(folder_name):
+        if os.path.exists(os.path.join("utils",folder_name)):
             break
         os.chdir("..")
         basepath = os.path.join(basepath, "..")
@@ -40,10 +32,10 @@ get_dir("cleaner")
 get_dir("fetcher")
 get_dir("trainer")
 
-from logger.Logger import Logger
-from cleaner.Cleaner import DataCleaner
-from fetcher.Fetcher import DataFetcher
-from trainer.Trainer import Trainer
+from utils.logger.Logger import Logger
+from utils.cleaner.Cleaner import DataCleaner
+from utils.fetcher.Fetcher import DataFetcher
+from utils.trainer.Trainer import Trainer
 
 logger = Logger("logs_backend.db")
 cleaner = DataCleaner()
@@ -51,16 +43,19 @@ fetcher = DataFetcher()
 trainer = Trainer()
 
 CWD = os.getcwd()
-ROOT_DIR = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
-MODELS_DIR = os.path.join(ROOT_DIR, "models")
-PREDICTIONS_DIR = os.path.join(ROOT_DIR, "data")
-# { 'AAPL': 'Path/to/apple/_v1'}
-models_in_use = {}
 
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-def get_all_stock_model_versions_data(stock_symbol) -> list:
+MODELS_DIR = os.path.join(ROOT_DIR, "utils/models")
+PREDICTIONS_DIR = os.path.join(ROOT_DIR, "utils/data")
+
+class StocksDropdownForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        dropdown_options = tuple([(model.for_stock, model.for_stock) for model in list(PredictionModel.objects.all())])
+        super(StocksDropdownForm, self).__init__(*args, **kwargs)
+        self.fields["stocks"] = forms.ChoiceField(choices=dropdown_options)
+
+def get_all_stock_model_versions_data(request, stock_symbol) -> list:
     model_data = []
     folder = list(
         filter(
@@ -70,7 +65,10 @@ def get_all_stock_model_versions_data(stock_symbol) -> list:
     )[0]
     for version in os.listdir(os.path.join(MODELS_DIR, folder)):
         model_data.append(get_stock_model_data(stock_symbol, version=int(version[2:])))
-    return JsonResponse(model_data, safe=False, status=status.HTTP_200_OK)
+    response = {
+        "model_data": model_data
+    }
+    return JsonResponse(response, status=200)
 
 
 def get_stock_model_data(stock_symbol, version: int = 0) -> tuple:
@@ -100,39 +98,7 @@ def get_stock_model_data(stock_symbol, version: int = 0) -> tuple:
 
         return tuple([mv, nn, a, p])
 
-
-# class JSONResponse(HttpResponse):
-# 	def __init__(self, data, **kwargs):
-# 		content = JSONRenderer().render(data)
-# 		kwargs['content_type'] = 'application/json'
-# 		super(JSONResponse, self).__init__(content, **kwargs)
-
-# class IsAuthenticated(permissions.IsAuthenticated):
-# 	def has_permission(self, request, view):
-# 		if request.method == 'OPTIONS':
-# 			return True
-# 		return super(IsAuthenticated, self).has_permission(request, view)
-
-
-def get_dropdown_options():
-    return tuple([(key, key) for key in list(models_in_use.keys())])
-
-
-class StocksDropdownForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        super(StocksDropdownForm, self).__init__(*args, **kwargs)
-        self.fields["stocks"] = forms.ChoiceField(choices=get_dropdown_options())
-
-
-def populate_dropdown():
-    with open(os.path.join(PREDICTIONS_DIR, "models_in_use.txt"), "r") as f:
-        for pair in f.readlines():
-            (key, value) = pair.split("=")
-            models_in_use[key] = value
-
-
 def index(request):
-    populate_dropdown()
     form = StocksDropdownForm()
     if request.method == "POST":
         form = StocksDropdownForm(request.POST)
@@ -141,15 +107,6 @@ def index(request):
             return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock}")
     errors = form.errors or None
     return render(request, "index.html", {"form": form, "errors": errors})
-
-
-def get_model_in_use_path(stock):
-    with open(os.path.join(PREDICTIONS_DIR, "models_in_use.txt"), "a+") as f:
-        f.seek(0)
-        for line in f.readlines():
-            if stock in line:
-                return line.split("=")[1]
-    return ""
 
 
 def get_model_path(stock_symbol: str, version=0) -> str:
@@ -170,25 +127,26 @@ def get_model_path(stock_symbol: str, version=0) -> str:
         return model_path
     return ""
 
-
-# This should run every 24 hours and have option for force refresh
-def prepare_daily_data():
-    fetcher.fetch_all_stocks()
-    cleaner.clean_all_stocks()
-
+def load():
+    return render("loading.html")
 
 def get_pred(request, stock_symbol):
     fetcher.fetch_a_stock(stock_symbol)
     cleaner.clean_a_stock(stock_symbol)
     x_train, y_train, x_test, y_test = cleaner.get_prep_data(stock_symbol)
-    if stock_symbol in models_in_use.keys():
-        model_path = get_model_in_use_path(stock_symbol).strip()
-        current_model = tf.keras.models.load_model(model_path, compile=False)
-        to_predict = x_test  # shift(y_test, -1, cval=0)
-        predictions = current_model.predict(to_predict)
+    existing_model = None
+    try:
+        existing_model = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
+    except ObjectDoesNotExist:
+        HttpResponseRedirect(f"http://localhost:8000/train/{stock_symbol}/100/True")
 
-        version = int(get_model_in_use_path(stock_symbol).split("_")[-1][1:])
-        mv, nn, a, p = get_stock_model_data(stock_symbol, version)
+    if existing_model:
+        version = existing_model.version
+        model_path = get_model_path(stock_symbol, version)
+        current_model = tf.keras.models.load_model(model_path, compile=False)
+        predictions = current_model.predict(x_test)
+
+        p = get_stock_model_data(stock_symbol, version)[3]
         p = [pred[0] for pred in cleaner.rescale_data(predictions)][-100:]
         actual_values = cleaner._get_df_from_table(stock_symbol, True)
         actual_values = actual_values["Close"][-len(p) :].tolist()
@@ -213,16 +171,16 @@ def get_pred(request, stock_symbol):
 
         context = {
             "prediction": round(p[-1], 2),
-            "stock": stock_symbol,
-            "model_version": mv,
-            "num_nodes": nn,
-            "acc_0": a[0],
-            "acc_1": a[1],
-            "acc_2": a[2],
-            "acc_3": a[3],
-            "acc_4": a[4],
-            "acc_5": a[5],
-            "acc_6": a[6],
+            "stock": existing_model.for_stock,
+            "model_version": version,
+            "num_nodes": existing_model.num_nodes,
+            "acc_0": existing_model.acc_50,
+            "acc_1": existing_model.acc_60,
+            "acc_2": existing_model.acc_70,
+            "acc_3": existing_model.acc_80,
+            "acc_4": existing_model.acc_90,
+            "acc_5": existing_model.acc_95,
+            "acc_6": existing_model.acc_99,
             "graph_div": graph_div,
         }
 
@@ -256,133 +214,86 @@ def get_pred(request, stock_symbol):
 
         return render(request, "predictions.html", context)
     else:
-        return HttpResponseRedirect('http://localhost:8000')
+        load()
+        return HttpResponseRedirect(f"http://localhost:8000/train/{stock_symbol}/100/True")
 
 
-def should_update_model_in_use_if_it_is_much_better_or_not_as_good(
-    stock_symbol: str, model_acc: list
-) -> bool:
+def should_update_model(stock_symbol: str, model_acc: list) -> bool:
     if get_model_path(stock_symbol) == "":
         return True
-    cur_model_acc = get_stock_model_data(
-        stock_symbol, int(models_in_use.get(stock_symbol).split(os.sep)[-1][2:])
-    )[2]
+    model = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
+    cur_model_acc = [model.acc_50, model.acc_60, model.acc_70, model.acc_80, model.acc_90, model.acc_95, model.acc_99]
     return [model_acc[i] >= cur_model_acc[i] for i in range(len(cur_model_acc))]
 
 
-# Add model to list of in-use models if doesnt exist
-def add_to_models_in_use(stock_symbol):
-    model_path = os.path.join(MODELS_DIR, stock_symbol + "_lstm_model", "_v1")
-    with open(os.path.join(PREDICTIONS_DIR, "models_in_use.txt"), "a+") as f:
-        f.seek(0)
-        models_in_use[stock_symbol] = model_path
-        to_write = f"{stock_symbol}={model_path}\n"
-        if stock_symbol not in [line.split("=")[0] for line in f.readlines()]:
-            f.write(to_write)
+def model_exists(stock_symbol) -> bool:
+    try:
+        model = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
+        return model != None
+    except ObjectDoesNotExist:
+        return False
 
-
-# Update existing model version in list of in-use models
-def update_model_in_use(stock_symbol, path_to_new_model):
-    a = open(os.path.join(PREDICTIONS_DIR, "models_in_use.txt"), "a+")
-    a.seek(0)
-    lines = a.readlines()
-    a.close()
-
-    for line in lines:
-        if line.split("=")[0] == stock_symbol:
-            lines.pop(lines.index(line))
-
-    b = open(os.path.join(PREDICTIONS_DIR, "models_in_use.txt"), "w+")
-    b.seek(0)
-    for line in lines:
-        b.write(line)
-    to_write = f"{stock_symbol}={path_to_new_model}\n"
-    b.write(to_write)
-    b.close()
-
-
-def _admin_train(stock_symbol, num_nodes):
-    trainer.train_a_stock(stock_symbol, int(num_nodes), True)
-    add_to_models_in_use(stock_symbol)
-    return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock_symbol}")
-
+# For admin use only
+def _admin_model_train(stock_symbol, num_nodes):
+    model_stats = trainer.train_a_stock(stock_symbol, num_nodes, True)
+    # update current model to be newly trained one
+    accuracies = model_stats['accuracy']
+    model_version = get_stock_model_data(stock_symbol)[0]
+    model_path = get_model_path(stock_symbol, int(model_version))
+    pm = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
+    pm.acc_50 = accuracies[0] * 100
+    pm.acc_60 = accuracies[1] * 100
+    pm.acc_70 = accuracies[2] * 100
+    pm.acc_80 = accuracies[3] * 100
+    pm.acc_90 = accuracies[4] * 100
+    pm.acc_95 = accuracies[5] * 100
+    pm.acc_99 = accuracies[6] * 100
+    pm.num_nodes = num_nodes
+    pm.version = model_version
+    pm.path = model_path
+    pm.save()
 
 def admin_train(request, stock_symbol, num_nodes, should_save=False):
     save = True if should_save == "True" else False
     # Training on a new stock symbol that doesnt exist
     model_stats = trainer.train_a_stock(stock_symbol, int(num_nodes), save)
-    responseMSG = True  # json.dumps(should_update_model_in_use_if_it_is_much_better_or_not_as_good(stock_symbol, model_stats['accuracy']))
     # update current model to be newly trained one
     if save == True:
-        if get_model_in_use_path == "":
-            add_to_models_in_use(stock_symbol)
+        if not model_exists(stock_symbol):
+            accuracies = model_stats['accuracy']
+            model_version = 1
+            pm = PredictionModel(
+                for_stock=stock_symbol,
+                acc_50=accuracies[0] * 100,
+                acc_60=accuracies[1] * 100,
+                acc_70=accuracies[2] * 100,
+                acc_80=accuracies[3] * 100,
+                acc_90=accuracies[4] * 100,
+                acc_95=accuracies[5] * 100,
+                acc_99=accuracies[6] * 100,
+            )
+            pm.num_nodes = num_nodes
+            pm.version = model_version
+            pm.save()
         else:
-            update_model(request, stock_symbol, get_stock_model_data(stock_symbol)[0])
+            accuracies = model_stats['accuracy']
+            model_version = get_stock_model_data(stock_symbol)[0]
+            pm = PredictionModel.objects.get(for_stock__iexact=stock_symbol)
+            pm.acc_50 = accuracies[0] * 100
+            pm.acc_60 = accuracies[1] * 100
+            pm.acc_70 = accuracies[2] * 100
+            pm.acc_80 = accuracies[3] * 100
+            pm.acc_90 = accuracies[4] * 100
+            pm.acc_95 = accuracies[5] * 100
+            pm.acc_99 = accuracies[6] * 100
+            pm.num_nodes = num_nodes
+            pm.version = model_version
+            pm.save()
 
-    return JsonResponse(responseMSG, safe=False, status=status.HTTP_200_OK)
-
-
-def update_model(request, stock_symbol, version):
-    file_path = get_model_path(stock_symbol, int(version))
-    update_model_in_use(stock_symbol, file_path)
-    return HttpResponse(status.HTTP_200_OK)
-
-
-def admin_models(request, stock_symbol):
-    # if request.method == "GET":
-
-    print("it works wooho admin_models  ", stock_symbol)
-    return HttpResponse(
-        status=status.HTTP_200_OK,
-    )
-
-
-def test(request):
-    # fetcher.fetch_all_stocks()
-    # cleaner.clean_all_stocks()
-    # trainer.train_all_stocks(100, True)
-    acc = "woo"
-    return JsonResponse(acc, safe=False, status=status.HTTP_200_OK)
-
-
-# for prediction models using python objects
-@csrf_exempt
-def task_list(request):
-    if request.method == "GET":
-        task = PredModel.objects.all()
-        task_serializer = Serializer(task, many=True)
-        return JsonResponse(task_serializer.data)
-
-    elif request.method == "POST":
-        task_data = JSONParser().parse(request)
-        task_serializer = Serializer(data=task_data)
-        if task_serializer.is_valid():
-            task_serializer.save()
-            return JsonResponse(task_serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(task_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# api calls for get/put/delete with pk "private key"
-# for prediction models using python objects
-@csrf_exempt
-def task_detail(request, pk):
-    try:  # cheks predmodel.objects for a specific instance
-        task = PredModel.objects.get(pk=pk)
-    except PredModel.DoesNotExist:
-        return HttpResponse(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == "GET":
-        task_serializer = Serializer(task, many=False)
-        return JsonResponse(task_serializer.data)
-
-    elif request.method == "PUT":
-        task_data = JSONParser().parse(request)
-        task_serializer = Serializer(task, data=task_data)
-        if task_serializer.is_valid():
-            task_serializer.save()
-            return JsonResponse(task_serializer.data)
-        return JsonResponse(task_serializer.errors, status=status.HTTP_400_BAD_REQUESTS)
-
-    elif request.method == "DELETE":
-        task.delete()
-        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+        return HttpResponseRedirect(f"http://localhost:8000/get-pred/{stock_symbol}")
+    response = {
+        "should_update": should_update_model(stock_symbol, model_stats['accuracy']),
+        # "accuracy": list(model_stats['accuracy']),
+        # "predictions": list(model_stats['predictions'])
+        }
+    return JsonResponse(response, status=200)
