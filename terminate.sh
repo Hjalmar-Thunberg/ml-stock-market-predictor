@@ -1,2 +1,2 @@
-docker stop stockModels backend frontend
-docker rm stockModels backend frontend
+docker stop backend
+docker rm backend
